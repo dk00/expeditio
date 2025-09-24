@@ -1,0 +1,19 @@
+{
+  "name": "expeditio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "export NODE_NO_WARNINGS=1 && rsbuild build",
+    "dev": "export NODE_NO_WARNINGS=1 && rsbuild dev",
+    "preview": "export NODE_NO_WARNINGS=1 && rsbuild preview"
+  },
+  "dependencies": {
+    "@emotion/css": "^11.13.5",
+    "preact": "^10.27.2"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^1.5.12",
+    "@rsbuild/plugin-preact": "^1.5.2"
+  }
+}

@@ -1,0 +1,14 @@
+node_modules/
+*.log
+.DS_Store
+.vscode
+yarn-cache
+cache.zip
+.eslintcache
+.next
+out
+public
+coverage
+junit.xml
+.husky/_
+.idea/
