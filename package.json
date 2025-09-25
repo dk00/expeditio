@@ -13,6 +13,7 @@
     "preact": "^10.27.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
     "@rsbuild/core": "^1.5.12",
     "@rsbuild/plugin-preact": "^1.5.2"
   }

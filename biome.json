@@ -1,0 +1,18 @@
+{
+	"linter": {
+		"includes": ["src/**/*.jsx", "src/**/*.js"],
+		"rules": {
+			"correctness": {
+				"noUndeclaredVariables": "error"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"semicolons": "asNeeded",
+			"bracketSpacing": false,
+			"quoteStyle": "single",
+			"arrowParentheses": "asNeeded"
+		}
+	}
+}
