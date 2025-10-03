@@ -36,7 +36,7 @@ const EventCard = ({
 	const localDate = new Date(date).toDateString()
 
 	return (
-		<div class={css(cardStyle, className)} {...rest}>
+		<div class={css(cardStyle, className)} data-date={date} {...rest}>
 			<div class={css(timeStyle)}>
 				<FormattedTime date={date} />
 			</div>

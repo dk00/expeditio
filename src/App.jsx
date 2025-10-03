@@ -1,6 +1,8 @@
 import {css} from '@emotion/css'
-import {useEffect, useRef, useState} from 'preact/hooks'
+import {useState} from 'preact/hooks'
 
+import EditEventDetail from './EditEventDetail'
+import EditingEvent from './EditingEvent'
 import EventCard from './EventCard'
 import {edit as editItinerary} from './itinerary'
 import mock from './mock'
@@ -52,10 +54,10 @@ const getDailyItinerary = itinerary => {
 	// TODO timzone for start date
 	const startDate = new Date(itinerary[0].date)
 
-	return itinerary.reduce((last, item) => {
+	return itinerary.reduce((last, item, index) => {
 		const dayList = fillItineraryDays(last, item.date)
 		const currentDay = dayList.at(-1)
-		currentDay.items = currentDay.items.concat(item)
+		currentDay.items = currentDay.items.concat({...item, listIndex: index})
 		return dayList
 	}, [])
 }
@@ -106,7 +108,7 @@ const Itinerary = ({items, replaceIndex, replaceItem, onEdit, onCreate}) => (
 	<div class={css({h3: {margin: 0, padding: '0.5em'}})}>
 		{items.map((item, index) =>
 			item.type === 'head' ? (
-				<h3>
+				<h3 data-date={timeOfDay(item.date, '05:00')}>
 					<FormattedDate date={item.date} />
 				</h3>
 			) : index === replaceIndex ? (
@@ -120,109 +122,6 @@ const Itinerary = ({items, replaceIndex, replaceItem, onEdit, onCreate}) => (
 	</div>
 )
 
-const editStyle = {
-	position: 'fixed',
-	bottom: 0,
-	width: '100%',
-	background: '#333',
-	transform: 'translateY(100%)',
-	transition: 'transform 0.3s ease-in-out',
-}
-
-const editOpenStyle = {
-	transform: 'translateY(0)',
-	label: {
-		display: 'block',
-		padding: '0.5em',
-	},
-	input: {
-		margin: '0 0.5em',
-		fontSize: '100%',
-	},
-}
-
-const editActionsStyle = {
-	display: 'flex',
-	justifyContent: 'space-between',
-	background: '#000',
-
-	'> button': {
-		flex: '0 0 calc(100% / 3 - 1px)',
-		border: 'none',
-		borderRadius: 0,
-		background: '#555',
-		'&:last-of-type': {
-			background: '#060',
-		},
-	},
-}
-
-const EditEventDetail = ({current = {}, onChange, onSave, onCancel}) => {
-	const [values, setValues] = useState({})
-	const onClickSave = () => onSave(values)
-	const onChangeLocation = event => {
-		setValues({...values, location: event.target.value})
-		onChange(event, {name: 'location', value: event.target.value})
-	}
-	useEffect(() => {
-		setValues({
-			location: current.location || '',
-			date: current.date || '',
-		})
-	}, [current])
-
-	return (
-		<div class={css(editStyle, current.date && editOpenStyle)}>
-			<label>
-				Location
-				<input type="text" value={values.location} onInput={onChangeLocation} />
-			</label>
-			<div class={css(editActionsStyle)}>
-				<button type="button" onClick={onCancel}>
-					↩️
-				</button>
-				<button type="button">✨</button>
-				<button type="button" onClick={onClickSave}>
-					✅
-				</button>
-			</div>
-		</div>
-	)
-}
-
-const editingStyle = {
-	touchAction: 'none',
-}
-
-const EditingEvent = ({value: {date, location}, onChange}) => {
-	const [position, setPosition] = useState('')
-	const ref = useRef({})
-	const handleDrag = event => {
-		event.preventDefault()
-		event.target.setPointerCapture(event.pointerId)
-		ref.current.startY = event.clientY - (position.y || 0)
-	}
-	const handleMove = event => {
-		if (!event.target.hasPointerCapture(event.pointerId)) {
-			return
-		}
-		setPosition({y: event.clientY - ref.current.startY})
-	}
-	const handleRelease = event => {
-		event.target.releasePointerCapture(event.pointerId)
-	}
-
-	return (
-		<EventCard
-			class={css(editingStyle, {transform: `translateY(${position.y || 0}px)`})}
-			date={date}
-			location={location}
-			onPointerDown={handleDrag}
-			onPointerMove={handleMove}
-			onPointerUp={handleRelease}
-		/>
-	)
-}
 
 const App = () => {
 	const [itinerary, setItinerary] = useState(mock)
