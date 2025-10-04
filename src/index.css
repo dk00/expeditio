@@ -1,9 +1,10 @@
 :root {
-  color-scheme: dark light;
+	color-scheme: dark light;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  color: #ccc;
+html,
+body {
+	margin: 0;
+	padding: 0;
+	color: #ccc;
 }

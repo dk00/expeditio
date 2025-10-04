@@ -9,6 +9,7 @@
 	},
 	"javascript": {
 		"formatter": {
+			"indentStyle": "space",
 			"semicolons": "asNeeded",
 			"bracketSpacing": false,
 			"quoteStyle": "single",

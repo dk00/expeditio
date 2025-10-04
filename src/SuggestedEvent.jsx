@@ -7,11 +7,12 @@ const cardStyle = {
   padding: '1em',
   border: '3px dashed #666',
   borderRadius: '0.5em',
-  
 }
 
 const SuggestedEvent = ({tags, onClick}) => (
-	<div class={css(cardStyle)} onClick={onClick}>Add {tags[0]}</div>
+  <div class={css(cardStyle)} onClick={onClick}>
+    Add {tags[0]}
+  </div>
 )
 
 export default SuggestedEvent
