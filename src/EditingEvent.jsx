@@ -2,28 +2,13 @@ import {css} from '@emotion/css'
 import {useRef, useState} from 'preact/hooks'
 import EventCard from './EventCard'
 
-const addMinutes = (date, minutes) => {
-  if (!date) return
-  const now = new Date(date)
-  now.setMinutes(now.getMinutes() + minutes)
-  return now.toJSON()
-}
-
-const round10m = date => {
-  if (!date) return
-  const now = new Date(date)
-  now.setMinutes(now.getMinutes() - (now.getMinutes() % 10))
-  return now.toJSON()
-}
-
-const timeDiff = (start, end) =>
-  Math.abs(new Date(start) - new Date(end)) / 60000
+const round10 = num => Math.round(num / 10) * 10
 
 const getTimePosition = element => {
   const items = Array.from(element.childNodes)
     .filter(item => item.getAttribute('data-date'))
     .map(item => ({
-      date: item.getAttribute('data-date'),
+      date: Number.parseInt(item.getAttribute('data-date'), 10),
       top: item.offsetTop,
       height: item.offsetHeight,
     }))
@@ -32,14 +17,14 @@ const getTimePosition = element => {
   items.forEach(item => {
     if (!last) {
       last = item
-      positionDate[item.date] = item.top
+      positionDate[item.top] = item.date
       return
     }
-    const duration = timeDiff(item.date, last.date)
+    const duration = item.date - last.date
     const diff = item.top - last.top
     Array.from({length: diff}, (_, i) => i).forEach(top => {
       const minutes = (top * duration) / diff
-      positionDate[last.top + top] = round10m(addMinutes(last.date, minutes))
+      positionDate[last.top + top] = round10(last.date + minutes)
     })
     last = item
   })
@@ -50,7 +35,7 @@ const editingStyle = {
   touchAction: 'none',
 }
 
-const EditingEvent = ({value: {date, location}, onChange}) => {
+const EditingEvent = ({startDate, value: {date, location}, onChange}) => {
   const [position, setPosition] = useState('')
   const ref = useRef({})
   const handleDrag = event => {
@@ -81,6 +66,7 @@ const EditingEvent = ({value: {date, location}, onChange}) => {
   return (
     <EventCard
       class={css(editingStyle, {transform: `translateY(${position.y || 0}px)`})}
+      startDate={startDate}
       date={editedDate || date}
       location={location}
       onPointerDown={handleDrag}

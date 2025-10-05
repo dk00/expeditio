@@ -7,8 +7,10 @@ const cardStyle = {
   background: '#332',
 }
 
-const FormattedTime = ({date}) => {
-  const now = new Date(date)
+const FormattedTime = ({startDate, date}) => {
+	const actualDate = startDate && new Date(startDate)
+	actualDate.setMinutes(actualDate.getMinutes() + date)
+  const now = date.length ? new Date(date) : actualDate
   const hours = now.getHours().toString().padStart(2, '0')
   const minutes = now.getMinutes().toString().padStart(2, '0')
   return `${hours}:${minutes}`
@@ -26,6 +28,7 @@ const titleStyle = {
 
 const EventCard = ({
   date,
+	startDate,
   class: className,
   location,
   duration,
@@ -38,7 +41,7 @@ const EventCard = ({
   return (
     <div class={css(cardStyle, className)} data-date={date} {...rest}>
       <div class={css(timeStyle)}>
-        <FormattedTime date={date} />
+        <FormattedTime startDate={startDate} date={date} />
       </div>
       <div class={css(titleStyle)}>{location || '(New)'}</div>
     </div>
