@@ -155,6 +155,7 @@ const App = () => {
         replaceItem={
           editingItem.date && (
             <EditingEvent
+              key={editingItem.index}
               startDate={baseDate}
               value={editingItem}
               onChange={onChange}
