@@ -1,4 +1,4 @@
-const edit = (itinerary, {listIndex, ...values}) =>
+const edit = (itinerary, {listIndex, index, ...values}) =>
   (listIndex >= 0
     ? itinerary.slice(0, listIndex).concat(itinerary.slice(listIndex + 1))
     : itinerary

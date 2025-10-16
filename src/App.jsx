@@ -93,42 +93,100 @@ const FormattedDate = ({startDate, date}) => {
   return `${now.getMonth() + 1}-${now.getDate()}`
 }
 
+const handleSlot = (
+  element,
+  {index, slotIndex, slotPlacement = 'replace', slotElement},
+) => (
+  <>
+    {index === slotIndex && slotElement}
+    {index === slotIndex && slotPlacement === 'replace' ? '' : element}
+  </>
+)
+
+const itineraryStyle = {
+  h3: {
+    margin: 0,
+    padding: '0.5em',
+    button: {
+      marginLeft: '0.5em',
+      fontSize: '100%',
+    },
+  },
+}
+
 const Itinerary = ({
   items,
   startDate,
-  replaceIndex,
-  replaceItem,
+  slotIndex,
+  slotPlacement = 'replace',
+  children,
   onEdit,
   onCreate,
 }) => (
-  <div class={css({h3: {margin: 0, padding: '0.5em'}})}>
+  <div class={css(itineraryStyle)}>
     {items.map((item, index) =>
-      item.type === 'head' ? (
-        <h3 data-date={hourOfDay(item.date, 5)}>
-          <FormattedDate startDate={startDate} date={item.date} />
-        </h3>
-      ) : index === replaceIndex ? (
-        replaceItem
-      ) : item.location ? (
-        <EventCard
-          startDate={startDate}
-          {...item}
-          onClick={() => onEdit(item, index)}
-        />
-      ) : (
-        <SuggestedEvent {...item} onClick={() => onCreate(item, index)} />
+      handleSlot(
+        item.type === 'head' ? (
+          <h3 data-date={hourOfDay(item.date, 5)}>
+            <FormattedDate startDate={startDate} date={item.date} />
+            <button
+              type="button"
+              onClick={() =>
+                onCreate({
+                  defaultDate: hourOfDay(item.date, 10),
+                  date: hourOfDay(item.date, 10),
+                  index: 'new',
+                  tags: ['event'],
+                })
+              }
+            >
+              + Event
+            </button>
+          </h3>
+        ) : item.location ? (
+          <EventCard
+            startDate={startDate}
+            {...item}
+            onClick={() => onEdit(item, index)}
+          />
+        ) : (
+          <SuggestedEvent {...item} onClick={() => onCreate(item, index)} />
+        ),
+        {
+          index: item.index || index,
+          slotIndex,
+          slotPlacement,
+          slotElement: children,
+        },
       ),
     )}
   </div>
 )
 
+const addNewPlaceholder = (itinerary, editingItem) => {
+  if (editingItem.index !== 'new') {
+    return itinerary
+  }
+  const insertAt = itinerary
+    .concat({date: Infinity})
+    .findIndex(item => item.date >= editingItem.defaultDate)
+
+  return itinerary
+    .slice(0, insertAt)
+    .concat(editingItem)
+    .concat(itinerary.slice(insertAt))
+}
+
 const App = () => {
   const baseDate = mock()[0]?.date
   const [itinerary, setItinerary] = useState(() => rebase(mock()))
   const [editingItem, setEditingItem] = useState({})
-  const filledItinerary = getFilledItinerary(itinerary, baseDate)
+  const filledItinerary = addNewPlaceholder(
+    getFilledItinerary(itinerary, baseDate),
+    editingItem,
+  )
 
-  const onCreate = (item, index) => {
+  const onCreate = (item, index = 'new') => {
     console.log('create', item)
     setEditingItem({...item, index})
   }
@@ -151,47 +209,25 @@ const App = () => {
       <Itinerary
         items={filledItinerary}
         startDate={baseDate}
-        replaceIndex={editingItem.index}
-        replaceItem={
-          editingItem.date && (
-            <EditingEvent
-              key={editingItem.index}
-              startDate={baseDate}
-              value={editingItem}
-              onChange={onChange}
-            />
-          )
-        }
+        slotIndex={editingItem.index}
         onCreate={onCreate}
         onEdit={onEdit}
-      />
+      >
+        {editingItem.date && (
+          <EditingEvent
+            key={editingItem.index}
+            startDate={baseDate}
+            value={editingItem}
+            onChange={onChange}
+          />
+        )}
+      </Itinerary>
       <EditEventDetail
         current={editingItem}
         onChange={onChange}
         onCancel={onCancel}
         onSave={onSave}
       />
-      <div
-        class={css({
-          position: 'fixed',
-          bottom: '0.5em',
-          padding: '0.5em 0.7em',
-          borderRadius: '50%',
-          background: '#f59',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          alignSelf: 'center',
-          fontSize: '1em',
-          fontWeight: 'bold',
-          transition: 'border-radius 0.3s ease',
-          '&:hover': {
-            borderRadius: '1em',
-          },
-        })}
-      >
-        +
-      </div>
     </div>
   )
 }

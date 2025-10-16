@@ -6,7 +6,7 @@ const round10 = num => Math.round(num / 10) * 10
 
 const getTimePosition = element => {
   const items = Array.from(element.childNodes)
-    .filter(item => item.getAttribute('data-date'))
+    .filter(item => item.getAttribute?.('data-date'))
     .map(item => ({
       date: Number.parseInt(item.getAttribute('data-date'), 10),
       top: item.offsetTop,
@@ -33,6 +33,7 @@ const getTimePosition = element => {
 
 const editingStyle = {
   touchAction: 'none',
+  background: '#422',
 }
 
 const EditingEvent = ({startDate, value: {date, location}, onChange}) => {
