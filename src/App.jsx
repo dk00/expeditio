@@ -177,9 +177,15 @@ const addNewPlaceholder = (itinerary, editingItem) => {
     .concat(itinerary.slice(insertAt))
 }
 
+const tryLoad = () => {
+  try {
+    return JSON.parse(localStorage.savedItinerary)
+  } catch (e) {}
+}
+
 const App = () => {
   const baseDate = mock()[0]?.date
-  const [itinerary, setItinerary] = useState(() => rebase(mock()))
+  const [itinerary, setItinerary] = useState(() => tryLoad() || rebase(mock()))
   const [editingItem, setEditingItem] = useState({})
   const filledItinerary = addNewPlaceholder(
     getFilledItinerary(itinerary, baseDate),
@@ -201,7 +207,9 @@ const App = () => {
   const onSave = values => {
     console.log('save', values)
     setEditingItem({})
-    setItinerary(editItinerary(itinerary, {...editingItem, ...values}))
+    const edited = editItinerary(itinerary, {...editingItem, ...values})
+    setItinerary(edited)
+    localStorage.savedItinerary = JSON.stringify(edited, null, 2)
   }
 
   return (
