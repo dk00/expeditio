@@ -8,3 +8,7 @@ body {
 	padding: 0;
 	color: #ccc;
 }
+
+button, input {
+	font-size: 100%;;
+}

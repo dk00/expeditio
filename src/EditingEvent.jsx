@@ -36,7 +36,11 @@ const editingStyle = {
   background: '#422',
 }
 
-const EditingEvent = ({startDate, value: {date, location}, onChange}) => {
+const EditingEvent = ({
+  startDate,
+  value: {date, location, transit},
+  onChange,
+}) => {
   const [position, setPosition] = useState('')
   const ref = useRef({})
   const handleDrag = event => {
@@ -70,6 +74,7 @@ const EditingEvent = ({startDate, value: {date, location}, onChange}) => {
       startDate={startDate}
       date={editedDate || date}
       location={location}
+      transit={transit}
       onPointerDown={handleDrag}
       onPointerMove={handleMove}
       onPointerUp={handleRelease}

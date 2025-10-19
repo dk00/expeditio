@@ -4,7 +4,7 @@ import {useState} from 'preact/hooks'
 import EditEventDetail from './EditEventDetail'
 import EditingEvent from './EditingEvent'
 import EventCard from './EventCard'
-import {edit as editItinerary} from './itinerary'
+import {edit as editItinerary, planTransit} from './itinerary'
 import mock from './mock'
 import SuggestedEvent from './SuggestedEvent'
 
@@ -200,6 +200,10 @@ const App = () => {
     console.log('edit', item, index)
     setEditingItem({...item, index})
   }
+  const onPlanTransit = () =>
+    setEditingItem(
+      planTransit(filledItinerary, {editing: editingItem, startDate: baseDate}),
+    )
   const onChange = (_event, {name, value}) =>
     setEditingItem({...editingItem, [name]: value})
 
@@ -231,8 +235,10 @@ const App = () => {
         )}
       </Itinerary>
       <EditEventDetail
+        startDate={baseDate}
         current={editingItem}
         onChange={onChange}
+        onPlanTransit={onPlanTransit}
         onCancel={onCancel}
         onSave={onSave}
       />

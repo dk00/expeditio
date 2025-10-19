@@ -3,43 +3,7 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 import {css} from '@emotion/css'
 import {useEffect, useState} from 'preact/hooks'
-
-const editStyle = {
-  position: 'fixed',
-  bottom: 0,
-  width: '100%',
-  background: '#333',
-  transform: 'translateY(100%)',
-  transition: 'transform 0.3s ease-in-out',
-  label: {
-    display: 'block',
-    padding: '0.5em',
-  },
-  input: {
-    margin: '0 0.5em',
-    fontSize: '100%',
-  },
-}
-
-const editOpenStyle = {
-  transform: 'translateY(0)',
-}
-
-const editActionsStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  background: '#000',
-
-  '> button': {
-    flex: '0 0 calc(100% / 3 - 1px)',
-    border: 'none',
-    borderRadius: 0,
-    background: '#555',
-    '&:last-of-type': {
-      background: '#060',
-    },
-  },
-}
+import {addRoute, editTransit, getTransitUrl} from './transit'
 
 const tagStyle = {
   display: 'flex',
@@ -50,8 +14,8 @@ const tagStyle = {
     borderRadius: '0.2em',
     '&[aria-checked=true]': {
       background: '#f59',
-    }
-  }
+    },
+  },
 }
 
 const Tags = ({value = [], onChange}) => (
@@ -87,8 +51,8 @@ const Tags = ({value = [], onChange}) => (
       🏨
     </div>
     <div
-      aria-checked={value.includes('transport')}
-      onClick={() => onChange(['transport'])}
+      aria-checked={value.includes('transit')}
+      onClick={() => onChange(['transit'])}
     >
       🚃
     </div>
@@ -107,35 +71,145 @@ const Tags = ({value = [], onChange}) => (
   </div>
 )
 
-const EditEventDetail = ({current = {}, onChange, onSave, onCancel}) => {
+const transitStyle = {
+  margin: '0.5em',
+  '> div': {
+    display: 'flex',
+    alignItems: 'center',
+    input: {
+      margin: '0.5em 0',
+      padding: '0.3em',
+      flex: '1',
+      fontSize: '100%',
+    },
+    a: {
+      margin: '0 0.5em',
+      textDecoration: 'none',
+    }
+  }
+}
+
+const EditTransit = ({startDate, date, routes = [], onChange, onAdd}) => (
+  <div class={css(transitStyle)}>
+    <button type="button" onClick={onAdd}>
+      + route
+    </button>
+    {routes.map((route, index) => (
+      <div>
+        <input
+          type="text"
+          onInput={event => onChange(event, index)}
+          value={route}
+        />
+        <a href={getTransitUrl({startDate, date, route})} target="_blank">
+          🔍
+        </a>
+      </div>
+    ))}
+  </div>
+)
+
+const editStyle = {
+  position: 'fixed',
+  bottom: 0,
+  width: '100%',
+  background: '#333',
+  transform: 'translateY(100%)',
+  transition: 'transform 0.3s ease-in-out',
+  label: {
+    padding: '0.5em',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  input: {
+    margin: '0 0.5em',
+    flex: '1',    
+  },
+  '> button': {
+    margin: '0.5em',
+    padding: '0.5em',
+  },
+}
+
+const editOpenStyle = {
+  transform: 'translateY(0)',
+}
+
+const editActionsStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  background: '#000',
+
+  '> button': {
+    flex: '0 0 calc(100% / 3 - 1px)',
+    border: 'none',
+    borderRadius: 0,
+    fontSize: '150%',
+    background: '#555',
+    '&:last-of-type': {
+      background: '#060',
+    },
+  },
+}
+
+const EditEventDetail = ({
+  startDate,
+  current = {},
+  onChange,
+  onPlanTransit,
+  onSave,
+  onCancel,
+}) => {
   const [values, setValues] = useState({})
   const onClickSave = () => onSave(values)
   const onChangeLocation = event => {
-    setValues({...values, location: event.target.value})
+    setValues(state => ({...state, location: event.target.value}))
     onChange(event, {name: 'location', value: event.target.value})
   }
   const onChangeTags = tags => {
-    setValues({...values, tags})
+    setValues(state => ({...state, tags}))
     onChange(null, {name: 'tags', value: tags})
   }
+  const onChangeTransit = (event, index) => {
+    const value = editTransit(event, values.transit, index)
+    setValues(state => ({...state, transit: value}))
+    onChange(event, {name: 'transit', value})
+  }
+  const onAddRoute = event =>
+    onChange(event, {
+      name: 'transit',
+      value: addRoute(event, values.transit, current),
+    })
+
   useEffect(() => {
     setValues({
       location: current.location || '',
       date: current.date || '',
       tags: current.tags || [],
+      transit: current.transit,
     })
   }, [current])
 
   return (
     <div class={css(editStyle, current.date && editOpenStyle)}>
-      <Tags
-        value={values.tags}
-        onChange={onChangeTags}
-      />
       <label>
         Location
         <input type="text" value={values.location} onInput={onChangeLocation} />
       </label>
+      <Tags value={values.tags} onChange={onChangeTags} />
+      {values.transit ? (
+        <EditTransit
+          startDate={startDate}
+          date={current.date}
+          routes={values.transit}
+          onAdd={onAddRoute}
+          onChange={onChangeTransit}
+        />
+      ) : (
+        <button type="button" onClick={() => onPlanTransit()}>
+          plan transit
+        </button>
+      )}
       <div class={css(editActionsStyle)}>
         <button type="button" onClick={onCancel}>
           ⬅
