@@ -110,12 +110,8 @@ const EditTransit = ({startDate, date, routes = [], onChange, onAdd}) => (
 )
 
 const editStyle = {
-  position: 'fixed',
-  bottom: 0,
   width: '100%',
   background: '#333',
-  transform: 'translateY(100%)',
-  transition: 'transform 0.3s ease-in-out',
   label: {
     padding: '0.5em',
     display: 'flex',

@@ -183,6 +183,40 @@ const tryLoad = () => {
   } catch (e) {}
 }
 
+const layoutStyle = {
+  '@media (orientation: portrait)': {
+    '> div:last-of-type': {
+      // edit detail, appear from bottom
+      position: 'fixed',
+      bottom: 0,
+      transform: 'translateY(100%)',
+      transition: 'transform 0.3s ease-in-out',
+    },
+  },
+  '@media (orientation: landscape)': {
+    display: 'flex',
+    '> div:first-of-type': {
+      // itinerary, left side
+      flex: '0 0 62%',
+    },
+    '> div:last-of-type': {
+      // edit detail, right side
+      position: 'sticky',
+      top: '5em',
+      flex: '1',
+      alignSelf: 'flex-start',
+    },
+  },
+}
+
+const editingStyle = {
+  '@media (orientation: portrait)': {
+    '> div:last-of-type': {
+      transform: 'translateY(0)',
+    },
+  },
+}
+
 const App = () => {
   const baseDate = mock()[0]?.date
   const [itinerary, setItinerary] = useState(() => tryLoad() || rebase(mock()))
@@ -217,7 +251,7 @@ const App = () => {
   }
 
   return (
-    <div>
+    <div class={css(layoutStyle, editingItem.index >= 0 && editingStyle)}>
       <Itinerary
         items={filledItinerary}
         startDate={baseDate}
@@ -225,7 +259,7 @@ const App = () => {
         onCreate={onCreate}
         onEdit={onEdit}
       >
-        {editingItem.date && (
+        {editingItem.index != null && (
           <EditingEvent
             key={editingItem.index}
             startDate={baseDate}
