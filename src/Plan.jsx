@@ -193,11 +193,11 @@ const Plan = () => {
   )
 
   const onCreate = (item, index = 'new') => {
-    console.log('create', item)
+    console.debug('create', item)
     setEditingItem({...item, index})
   }
   const onEdit = (item, index) => {
-    console.log('edit', item, index)
+    console.debug('edit', item, index)
     setEditingItem({...item, index})
   }
   const onPlanTransit = () =>
@@ -209,16 +209,17 @@ const Plan = () => {
 
   const onCancel = () => setEditingItem({})
   const onSave = values => {
-    console.log('save', values)
+    console.debug('save', values)
     setEditingItem({})
     const edited = editItinerary(itinerary, {...editingItem, ...values})
     edited[0].baseDate = baseDate
     setItinerary(edited)
     localStorage.savedItinerary = JSON.stringify(edited, null, 2)
   }
+  const editing = editingItem.index >= 0 || editingItem.index === 'new'
 
   return (
-    <div class={css(layoutStyle, editingItem.index >= 0 && editingStyle)}>
+    <div class={css(layoutStyle, editing && editingStyle)}>
       <Itinerary
         items={filledItinerary}
         startDate={baseDate}

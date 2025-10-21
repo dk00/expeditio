@@ -127,10 +127,6 @@ const editStyle = {
   },
 }
 
-const editOpenStyle = {
-  transform: 'translateY(0)',
-}
-
 const editActionsStyle = {
   display: 'flex',
   justifyContent: 'space-between',
@@ -187,7 +183,7 @@ const EditEventDetail = ({
   }, [current])
 
   return (
-    <div class={css(editStyle, current.date && editOpenStyle)}>
+    <div class={css(editStyle)}>
       <label>
         Location
         <input type="text" value={values.location} onInput={onChangeLocation} />
