@@ -1,3 +1,31 @@
+const startOfDay = (minutesOfJourney, base) =>
+  minutesOfJourney - ((base + minutesOfJourney) % 1440)
+
+const fillItineraryDays = (dayList, date, base) => {
+  const currentDay = startOfDay(date, base) // TODO timezone offset
+  if (!dayList.length) {
+    return [{date: currentDay, items: []}]
+  }
+  const next = dayList.at(-1).date + 1440
+  return date < next
+    ? dayList
+    : fillItineraryDays(dayList.concat({date: next, items: []}), date, base)
+}
+
+
+// assume itinerary is sorted by date
+const getDailyItinerary = (itinerary, baseDate) => {
+  const base = new Date(baseDate)
+  const baseMinutes = base.getHours() * 60 + base.getMinutes()
+
+  return itinerary.reduce((last, item, index) => {
+    const dayList = fillItineraryDays(last, item.date, baseMinutes)
+    const currentDay = dayList.at(-1)
+    currentDay.items = currentDay.items.concat({...item, listIndex: index})
+    return dayList
+  }, [])
+}
+
 const edit = (itinerary, {listIndex, index, ...values}) =>
   (listIndex >= 0
     ? itinerary.slice(0, listIndex).concat(itinerary.slice(listIndex + 1))
@@ -35,4 +63,4 @@ const planTransit = (itinerary, {editing, startDate}) => {
   }
 }
 
-export {edit, planTransit}
+export {getDailyItinerary, edit, planTransit}
