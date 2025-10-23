@@ -6,7 +6,7 @@ const getTransitUrl = ({startDate, date, route}) => {
   const dateObject = new Date(startDate)
   dateObject.setMinutes(dateObject.getMinutes() + date)
   const [, from, , to, arrivalTime = ''] = route.split(' ')
-  const [hours, minutes] = arrivalTime.split(':')
+  const [hours, minutes = ''] = arrivalTime.split(':')
   const params = {
     from,
     to,

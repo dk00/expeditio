@@ -4,6 +4,7 @@ const cardStyle = {
   margin: '0.5em',
   padding: '1em',
   display: 'flex',
+  flexWrap: 'wrap',
   alignItems: 'center',
   borderRadius: '0.5em',
   background: '#332',
@@ -29,7 +30,7 @@ const titleStyle = {
 }
 
 const Transit = ({routes}) => (
-  <div>
+  <div class={css({flex: '0 100%'})}>
     {routes.map(route => (
       <div>{route}</div>
     ))}
@@ -41,19 +42,24 @@ const EventCard = ({
   startDate,
   class: className,
   location,
-  duration,
-  destination,
-  flight,
+  tags = [],
   transit,
   ...rest
 }) => {
-  const localDate = new Date(date).toDateString()
+  const display = {
+    transit: tags.some(tag => /return/.test(tag))
+      ? 'after'
+      : transit
+        ? 'before'
+        : 'none',
+    main: tags.some(tag => /departure|return/.test(tag)) || !transit,
+  }
 
   return (
     <div class={css(cardStyle, className)} data-date={date} {...rest}>
-      {transit ? (
-        <Transit routes={transit} />
-      ) : (
+      {}
+      {display.transit === 'before' && <Transit routes={transit} />}
+      {display.main && (
         <>
           <div class={css(timeStyle)}>
             <FormattedTime startDate={startDate} date={date} />
@@ -61,6 +67,7 @@ const EventCard = ({
           <div class={css(titleStyle)}>{location || '(New)'}</div>
         </>
       )}
+      {display.transit === 'after' && <Transit routes={transit} />}
     </div>
   )
 }
