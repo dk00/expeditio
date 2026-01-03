@@ -5,6 +5,7 @@ import EditEventDetail from './EditEventDetail'
 import EditingEvent from './EditingEvent'
 import EventCard from './EventCard'
 import {edit as editItinerary, getDailyItinerary, planTransit} from './itinerary'
+import Layout from './Layout'
 import SuggestedEvent from './SuggestedEvent'
 
 const hourOfDay = (dayStart, hour) => dayStart + hour * 60
@@ -148,40 +149,6 @@ const tryLoad = () => {
   } catch (e) {}
 }
 
-const layoutStyle = {
-  '@media (orientation: portrait)': {
-    '> div:last-of-type': {
-      // edit detail, appear from bottom
-      position: 'fixed',
-      bottom: 0,
-      transform: 'translateY(100%)',
-      transition: 'transform 0.3s ease-in-out',
-    },
-  },
-  '@media (orientation: landscape)': {
-    display: 'flex',
-    '> div:first-of-type': {
-      // itinerary, left side
-      flex: '0 0 62%',
-    },
-    '> div:last-of-type': {
-      // edit detail, right side
-      position: 'sticky',
-      top: '5em',
-      flex: '1',
-      alignSelf: 'flex-start',
-    },
-  },
-}
-
-const editingStyle = {
-  '@media (orientation: portrait)': {
-    '> div:last-of-type': {
-      transform: 'translateY(0)',
-    },
-  },
-}
-
 // TODO empty state
 const Plan = () => {
   const [itinerary, setItinerary] = useState(() => tryLoad())
@@ -219,7 +186,7 @@ const Plan = () => {
   const editing = editingItem.index >= 0 || editingItem.index === 'new'
 
   return (
-    <div class={css(layoutStyle, editing && editingStyle)}>
+    <Layout editing={editing}>
       <Itinerary
         items={filledItinerary}
         startDate={baseDate}
@@ -244,7 +211,7 @@ const Plan = () => {
         onCancel={onCancel}
         onSave={onSave}
       />
-    </div>
+    </Layout>
   )
 }
 
