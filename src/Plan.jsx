@@ -4,7 +4,11 @@ import {useState} from 'preact/hooks'
 import EditEventDetail from './EditEventDetail'
 import EditingEvent from './EditingEvent'
 import EventCard from './EventCard'
-import {edit as editItinerary, getDailyItinerary, planTransit} from './itinerary'
+import {
+  edit as editItinerary,
+  getDailyItinerary,
+  planTransit,
+} from './itinerary'
 import Layout from './Layout'
 import SuggestedEvent from './SuggestedEvent'
 
@@ -145,8 +149,12 @@ const addNewPlaceholder = (itinerary, editingItem) => {
 
 const tryLoad = () => {
   try {
-    return JSON.parse(localStorage.savedItinerary)
+    const parsed = JSON.parse(localStorage.getItem('saved-itinerary'))
+    if (parsed[0].baseDate) {
+      return parsed
+    }
   } catch (e) {}
+  return []
 }
 
 // TODO empty state
@@ -181,7 +189,7 @@ const Plan = () => {
     const edited = editItinerary(itinerary, {...editingItem, ...values})
     edited[0].baseDate = baseDate
     setItinerary(edited)
-    localStorage.savedItinerary = JSON.stringify(edited, null, 2)
+    localStorage.setItem('saved-itinerary', JSON.stringify(edited, null, 2))
   }
   const editing = editingItem.index >= 0 || editingItem.index === 'new'
 
