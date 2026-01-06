@@ -3,6 +3,7 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 import {css} from '@emotion/css'
 import {useEffect, useState} from 'preact/hooks'
+import {formatDate} from './datetime'
 import {addRoute, editTransit, getTransitUrl} from './transit'
 
 const tagStyle = {
@@ -85,8 +86,8 @@ const transitStyle = {
     a: {
       margin: '0 0.5em',
       textDecoration: 'none',
-    }
-  }
+    },
+  },
 }
 
 const EditTransit = ({startDate, date, routes = [], onChange, onAdd}) => (
@@ -119,7 +120,7 @@ const editStyle = {
   },
   input: {
     margin: '0 0.5em',
-    flex: '1',    
+    flex: '1',
   },
   '> button': {
     margin: '0.5em',
@@ -158,6 +159,10 @@ const EditEventDetail = ({
     setValues(state => ({...state, location: event.target.value}))
     onChange(event, {name: 'location', value: event.target.value})
   }
+  const onChangeDate = event => {
+    setValues(state => ({...state, date: event.target.value}))
+    onChange(event, {name: 'date', value: event.target.value})
+  }
   const onChangeTags = tags => {
     setValues(state => ({...state, tags}))
     onChange(null, {name: 'tags', value: tags})
@@ -188,6 +193,12 @@ const EditEventDetail = ({
         Location
         <input type="text" value={values.location} onInput={onChangeLocation} />
       </label>
+      {values.date && (
+        <label>
+          Date
+          <input type="date" defaultValue={formatDate(values.date)} onChange={onChangeDate} />
+        </label>
+      )}
       <Tags value={values.tags} onChange={onChangeTags} />
       {values.transit ? (
         <EditTransit
@@ -211,6 +222,13 @@ const EditEventDetail = ({
           ✅
         </button>
       </div>
+
+      <pre>
+        {JSON.stringify(current, null, 2)}
+      </pre>
+      <pre>
+        {JSON.stringify(values, null, 2)}
+      </pre>
     </div>
   )
 }

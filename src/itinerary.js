@@ -1,3 +1,5 @@
+import {getTimestamp, hoursOf} from './datetime'
+
 const startOfDay = (minutesOfJourney, base) =>
   minutesOfJourney - ((base + minutesOfJourney) % 1440)
 
@@ -12,7 +14,6 @@ const fillItineraryDays = (dayList, date, base) => {
     : fillItineraryDays(dayList.concat({date: next, items: []}), date, base)
 }
 
-
 // assume itinerary is sorted by date
 const getDailyItinerary = (itinerary, baseDate) => {
   const base = new Date(baseDate)
@@ -24,6 +25,76 @@ const getDailyItinerary = (itinerary, baseDate) => {
     currentDay.items = currentDay.items.concat({...item, listIndex: index})
     return dayList
   }, [])
+}
+
+const getDailyEvents = ({date}) => ({
+  breakfast: {
+    defaultDate: hoursOf(date, 6, 30, 0, 0),
+    tags: ['breakfast'],
+  },
+  activity: {
+    defaultDate: hoursOf(date, 9, 0, 0, 0),
+    tags: [],
+  },
+  lunch: {
+    defaultDate: hoursOf(date, 11, 30, 0, 0),
+    tags: ['lunch'],
+  },
+  dinner: {
+    defaultDate: hoursOf(date, 18, 30, 0, 0),
+    tags: ['dinner'],
+  },
+  accommodation: {
+    defaultDate: hoursOf(date, 21, 30, 0, 0),
+    tags: ['accommodation'],
+  },
+})
+
+const expandItinerary = itinerary => {
+  const defaultDate = getTimestamp(date => date.setMonth(date.getMonth() + 1))
+  const departureDate = itinerary[0]?.date
+    ? getTimestamp(date => {
+        date.setTime(itinerary[0].date)
+        date.setDate(date.getDate() - 1)
+      })
+    : defaultDate
+  const returnDate = itinerary.at(-1)?.date
+    ? getTimestamp(date => date.setTime(itinerary.at(-1).date))
+    : defaultDate
+  const hintDeparture = itinerary[0]?.tags.includes('departure')
+    ? undefined
+    : {date: departureDate, tags: ['departure'], transit: []}
+  const hintReturn = itinerary.at(-1)?.tags.includes('return')
+    ? undefined
+    : {date: returnDate, tags: ['return'], transit: []}
+  const expanded = itinerary.reduce((items, event, index) => {
+    const dayDuration = 86400000
+    const lastDate = getTimestamp(date => {
+      date.setTime(items.at(-1)?.date || event.date - dayDuration)
+      date.setHours(24, 0, -1, 0)
+    })
+    const fill = Array.from(
+      {length: Math.ceil((event.date - lastDate) / dayDuration)},
+      (_, index) => {
+        const date = lastDate + 1000 + index * dayDuration
+        return {
+          type: 'head',
+          date,
+          dailyEvents: getDailyEvents({date}),
+        }
+      },
+    )
+    const headIndex =
+      fill.length > 0 ? items.length + fill.length - 1 : items.at(-1).headIndex
+    const head = fill.at(-1) || items[headIndex]
+    const data = {...event, listIndex: index, headIndex}
+    if (head.dailyEvents?.[event.tags?.[0]]) {
+      head.dailyEvents[event.tags[0]] = data
+    }
+    return items.concat(fill, data)
+  }, [])
+
+  return [].concat(hintDeparture, expanded, hintReturn).filter(Boolean)
 }
 
 const edit = (itinerary, {listIndex, index, ...values}) =>
@@ -48,7 +119,7 @@ const planTransit = (itinerary, {editing, startDate}) => {
     return {...previous, index: editing.index - 1}
   }
   const current = itinerary[editing.index]
-  const arrival = current.date - 5
+  const arrival = current.date - 5 * 60 * 1000
   const destination = current.location.replace(/\s+/g, '')
   const from = previous.location.replace(/\s+/g, '')
 
@@ -63,4 +134,4 @@ const planTransit = (itinerary, {editing, startDate}) => {
   }
 }
 
-export {getDailyItinerary, edit, planTransit}
+export {getDailyItinerary, expandItinerary, edit, planTransit}

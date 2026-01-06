@@ -6,11 +6,14 @@ import EditingEvent from './EditingEvent'
 import EventCard from './EventCard'
 import {
   edit as editItinerary,
+  expandItinerary,
   getDailyItinerary,
   planTransit,
 } from './itinerary'
 import Layout from './Layout'
 import SuggestedEvent from './SuggestedEvent'
+import {updatedDate} from './datetime'
+import DayHeader from './DayHeader'
 
 const hourOfDay = (dayStart, hour) => dayStart + hour * 60
 
@@ -56,11 +59,19 @@ const getFilledItinerary = (itinerary, baseDate) =>
     return last.concat({type: 'head', date: day.date}, items)
   }, [])
 
-const FormattedDate = ({startDate, date}) => {
-  const now = new Date(startDate)
-  now.setMinutes(now.getMinutes() + date)
-  const weekday = now.toLocaleDateString('ja', {weekday: 'short'})
-  return `${now.getMonth() + 1}-${now.getDate()} ${weekday}`
+const FormattedDate = ({date, timezone}) => {
+  const now = new Date(date)
+  const month = now.toLocaleDateString('en', {
+    month: '2-digit',
+    timeZone: timezone,
+  })
+  const day = now.toLocaleDateString('en', {day: '2-digit', timeZone: timezone})
+  const weekday = now.toLocaleDateString('ja', {
+    weekday: 'short',
+    timeZone: timezone,
+  })
+
+  return `${month}-${day} ${weekday}`
 }
 
 const handleSlot = (
@@ -88,46 +99,20 @@ const Itinerary = ({
   items,
   startDate,
   slotIndex,
-  slotPlacement = 'replace',
   children,
   onEdit,
   onCreate,
 }) => (
   <div class={css(itineraryStyle)}>
     {items.map((item, index) =>
-      handleSlot(
-        item.type === 'head' ? (
-          <h3 data-date={hourOfDay(item.date, 5)}>
-            <FormattedDate startDate={startDate} date={item.date} />
-            <button
-              type="button"
-              onClick={() =>
-                onCreate({
-                  defaultDate: hourOfDay(item.date, 10),
-                  date: hourOfDay(item.date, 10),
-                  index: 'new',
-                  tags: ['event'],
-                })
-              }
-            >
-              + Event
-            </button>
-          </h3>
-        ) : item.location ? (
-          <EventCard
-            startDate={startDate}
-            {...item}
-            onClick={() => onEdit(item, index)}
-          />
-        ) : (
-          <SuggestedEvent {...item} onClick={() => onCreate(item, index)} />
-        ),
-        {
-          index: item.index || index,
-          slotIndex,
-          slotPlacement,
-          slotElement: children,
-        },
+      slotIndex && (slotIndex === item.index || slotIndex === index) ? (
+        children
+      ) : item.location ? (
+        <EventCard {...item} onClick={() => onEdit(item, index)} />
+      ) : item.type === 'head' ? (
+        <DayHeader {...item} onClick={(_, data) => onCreate(data)} />
+      ) : (
+        <SuggestedEvent tags={item.tags} onClick={() => onEdit(item, index)} />
       ),
     )}
   </div>
@@ -150,7 +135,7 @@ const addNewPlaceholder = (itinerary, editingItem) => {
 const tryLoad = () => {
   try {
     const parsed = JSON.parse(localStorage.getItem('saved-itinerary'))
-    if (parsed[0].baseDate) {
+    if (parsed[0].date) {
       return parsed
     }
   } catch (e) {}
@@ -163,13 +148,17 @@ const Plan = () => {
   const baseDate = itinerary[0]?.baseDate
   const [editingItem, setEditingItem] = useState({})
   const filledItinerary = addNewPlaceholder(
-    getFilledItinerary(itinerary, baseDate),
+    expandItinerary(itinerary),
     editingItem,
   )
+  window.debugValue = filledItinerary
 
-  const onCreate = (item, index = 'new') => {
+  const onCreate = (item, targetIndex = 'new') => {
     console.debug('create', item)
-    setEditingItem({...item, index})
+    const index = item.listIndex
+      ? filledItinerary.findIndex(event => event.listIndex === item.listIndex)
+      : 'new'
+    setEditingItem({...item, index: index >= 0 ? index : targetIndex})
   }
   const onEdit = (item, index) => {
     console.debug('edit', item, index)
@@ -180,13 +169,20 @@ const Plan = () => {
       planTransit(filledItinerary, {editing: editingItem, startDate: baseDate}),
     )
   const onChange = (_event, {name, value}) =>
-    setEditingItem({...editingItem, [name]: value})
+    setEditingItem({
+      ...editingItem,
+      [name]: name === 'date' ? updatedDate(editingItem.date, value) : value,
+    })
 
   const onCancel = () => setEditingItem({})
   const onSave = values => {
-    console.debug('save', values)
+    console.debug('save', values, editingItem)
     setEditingItem({})
-    const edited = editItinerary(itinerary, {...editingItem, ...values})
+    const edited = editItinerary(itinerary, {
+      ...editingItem,
+      ...values,
+      date: values.date || editingItem.defaultDate,
+    })
     edited[0].baseDate = baseDate
     setItinerary(edited)
     localStorage.setItem('saved-itinerary', JSON.stringify(edited, null, 2))
@@ -205,7 +201,6 @@ const Plan = () => {
         {editingItem.index != null && (
           <EditingEvent
             key={editingItem.index}
-            startDate={baseDate}
             value={editingItem}
             onChange={onChange}
           />
