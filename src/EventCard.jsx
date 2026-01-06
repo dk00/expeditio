@@ -10,12 +10,18 @@ const cardStyle = {
   background: '#332',
 }
 
-const FormattedTime = ({startDate, date}) => {
-  const actualDate = startDate && new Date(startDate)
-  actualDate.setMinutes(actualDate.getMinutes() + date)
-  const now = date.length ? new Date(date) : actualDate
-  const hours = now.getHours().toString().padStart(2, '0')
-  const minutes = now.getMinutes().toString().padStart(2, '0')
+const FormattedTime = ({date, timeZone}) => {
+  const formatOptions = {
+    timeZone,
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  }
+  const parts = new Intl.DateTimeFormat('en-US', formatOptions).formatToParts(
+    new Date(date),
+  )
+  const hours = parts.find(p => p.type === 'hour').value
+  const minutes = parts.find(p => p.type === 'minute').value
   return `${hours}:${minutes}`
 }
 
@@ -37,9 +43,9 @@ const Transit = ({routes}) => (
   </div>
 )
 
+// TODO support timezones
 const EventCard = ({
   date,
-  startDate,
   class: className,
   location,
   tags = [],
@@ -57,12 +63,11 @@ const EventCard = ({
 
   return (
     <div class={css(cardStyle, className)} data-date={date} {...rest}>
-      {}
       {display.transit === 'before' && <Transit routes={transit} />}
       {display.main && (
         <>
           <div class={css(timeStyle)}>
-            <FormattedTime startDate={startDate} date={date} />
+            <FormattedTime date={date} />
           </div>
           <div class={css(titleStyle)}>{location || '(New)'}</div>
         </>

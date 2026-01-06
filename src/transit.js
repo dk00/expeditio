@@ -29,13 +29,13 @@ const getTransitUrl = ({startDate, date, route}) => {
 }
 
 const addRoute = (_event, routes, data) => {
-  const [arrival, destination] = routes[0].split(' ')
+  const [arrival, destination] = (routes[0] || '0:00 destination').split(' ')
   const [hours, minutes] = arrival.split(':')
   const tmp = new Date()
   tmp.setHours(hours)
   tmp.setMinutes(minutes)
   const start = formatTime(-30, tmp)
-  const first = `${start} ${data.location} - ${destination} ${arrival}`
+  const first = `${start} ${data.location || 'from'} - ${destination} ${arrival}`
 
   return [first].concat(routes)
 }

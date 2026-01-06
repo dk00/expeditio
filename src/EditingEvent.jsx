@@ -2,7 +2,7 @@ import {css} from '@emotion/css'
 import {useRef, useState} from 'preact/hooks'
 import EventCard from './EventCard'
 
-const round10 = num => Math.round(num / 10) * 10
+const round10 = num => Math.round(num / 600000) * 600000
 
 const getTimePosition = element => {
   const items = Array.from(element.childNodes)
@@ -37,8 +37,7 @@ const editingStyle = {
 }
 
 const EditingEvent = ({
-  startDate,
-  value: {date, location, transit},
+  value: { defaultDate, date = defaultDate, location, transit},
   onChange,
 }) => {
   const [position, setPosition] = useState('')
@@ -51,6 +50,7 @@ const EditingEvent = ({
       ref.current.positionDate = getTimePosition(
         event.currentTarget.parentElement,
       )
+      window.debugValue = ref.current.positionDate
     }
     ref.current.startY = event.clientY - (position.y || 0)
   }
@@ -71,7 +71,6 @@ const EditingEvent = ({
   return (
     <EventCard
       class={css(editingStyle, {transform: `translateY(${position.y || 0}px)`})}
-      startDate={startDate}
       date={editedDate || date}
       location={location}
       transit={transit}
