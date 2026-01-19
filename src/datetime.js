@@ -8,12 +8,19 @@ const formatDate = (timestamp, timeZone) => {
   return `${y}-${m}-${d}`
 }
 
-const formatTime = (minutes, startDate) => {
-  const now = new Date(startDate)
-  now.setMinutes(now.getMinutes() + minutes)
-  const h = now.getHours().toString().padStart(2, '0')
-  const m = now.getMinutes().toString().padStart(2, '0')
-  return `${h}:${m}`
+const formatTime = (date, {timeZone} = {}) => {
+  const formatOptions = {
+    timeZone,
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  }
+  const parts = new Intl.DateTimeFormat('en-US', formatOptions).formatToParts(
+    new Date(date),
+  )
+  const hours = parts.find(p => p.type === 'hour').value
+  const minutes = parts.find(p => p.type === 'minute').value
+  return `${hours}:${minutes}`
 }
 
 const getTimestamp = (update) => {

@@ -1,4 +1,5 @@
 import {css} from '@emotion/css'
+import { formatTime } from './datetime'
 
 const cardStyle = {
   margin: '0.5em',
@@ -8,21 +9,6 @@ const cardStyle = {
   alignItems: 'center',
   borderRadius: '0.5em',
   background: '#332',
-}
-
-const FormattedTime = ({date, timeZone}) => {
-  const formatOptions = {
-    timeZone,
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-  }
-  const parts = new Intl.DateTimeFormat('en-US', formatOptions).formatToParts(
-    new Date(date),
-  )
-  const hours = parts.find(p => p.type === 'hour').value
-  const minutes = parts.find(p => p.type === 'minute').value
-  return `${hours}:${minutes}`
 }
 
 const timeStyle = {
@@ -67,7 +53,7 @@ const EventCard = ({
       {display.main && (
         <>
           <div class={css(timeStyle)}>
-            <FormattedTime date={date} />
+            {formatTime(date)}
           </div>
           <div class={css(titleStyle)}>{location || '(New)'}</div>
         </>

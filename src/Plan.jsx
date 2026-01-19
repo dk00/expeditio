@@ -95,14 +95,7 @@ const itineraryStyle = {
   },
 }
 
-const Itinerary = ({
-  items,
-  startDate,
-  slotIndex,
-  children,
-  onEdit,
-  onCreate,
-}) => (
+const Itinerary = ({items, slotIndex, children, onEdit, onCreate}) => (
   <div class={css(itineraryStyle)}>
     {items.map((item, index) =>
       slotIndex && (slotIndex === item.index || slotIndex === index) ? (
@@ -151,7 +144,6 @@ const Plan = () => {
     expandItinerary(itinerary),
     editingItem,
   )
-  window.debugValue = filledItinerary
 
   const onCreate = (item, targetIndex = 'new') => {
     console.debug('create', item)

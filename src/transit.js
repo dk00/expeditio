@@ -2,9 +2,8 @@ import {formatTime} from './datetime'
 
 const dateTypeArrival = 4
 
-const getTransitUrl = ({startDate, date, route}) => {
-  const dateObject = new Date(startDate)
-  dateObject.setMinutes(dateObject.getMinutes() + date)
+const getTransitUrl = ({ date, route}) => {
+  const dateObject = new Date(date)
   const [, from, , to, arrivalTime = ''] = route.split(' ')
   const [hours, minutes = ''] = arrivalTime.split(':')
   const params = {
