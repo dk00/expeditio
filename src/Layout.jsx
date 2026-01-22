@@ -13,6 +13,12 @@ const layoutStyle = {
   '@media (orientation: landscape)': {
     display: 'flex',
     '> div:first-of-type': {
+      flex: '0 0  3rem',
+      position: 'sticky',
+      top: '1em',
+      alignSelf: 'flex-start',
+    },
+    '> div:nth-of-type(2)': {
       // itinerary, left side
       flex: '0 0 62%',
     },

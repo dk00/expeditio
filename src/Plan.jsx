@@ -1,5 +1,5 @@
 import {css} from '@emotion/css'
-import {useState} from 'preact/hooks'
+import {useState, useEffect} from 'preact/hooks'
 
 import EditEventDetail from './EditEventDetail'
 import EditingEvent from './EditingEvent'
@@ -125,9 +125,9 @@ const addNewPlaceholder = (itinerary, editingItem) => {
     .concat(itinerary.slice(insertAt))
 }
 
-const tryLoad = () => {
+const tryLoad = ({index = 0} = {}) => {
   try {
-    const parsed = JSON.parse(localStorage.getItem('saved-itinerary'))
+    const parsed = JSON.parse(localStorage.getItem(`saved-itinerary-${index}`))
     if (parsed[0].date) {
       return parsed
     }
@@ -135,9 +135,42 @@ const tryLoad = () => {
   return []
 }
 
+const switchPlansStyle = {
+  button: {
+    margin: '0.1rem 0',
+    width: '100%',
+    border: 'none',
+    textAlign: 'center',
+    fontSize: '2em',
+    transition: 'background 0.3s ease-in-out',
+  },
+}
+
+const selectedPlanStyle = {
+  background: 'pink',
+}
+
+const SwitchPlans = ({value, length, onChange}) => (
+  <div class={css(switchPlansStyle)}>
+    {Array.from({length}).map((_, index) => (
+      <button
+        class={value === index && css(selectedPlanStyle)}
+        type="button"
+        onClick={() => onChange(index)}
+      >
+        {index}
+      </button>
+    ))}
+  </div>
+)
+
 // TODO empty state
 const Plan = () => {
   const [itinerary, setItinerary] = useState(() => tryLoad())
+  const [planIndex, setPlanIndex] = useState(0)
+  useEffect(() => {
+    setItinerary(tryLoad({index: planIndex}))
+  }, [planIndex])
   const baseDate = itinerary[0]?.baseDate
   const [editingItem, setEditingItem] = useState({})
   const filledItinerary = addNewPlaceholder(
@@ -177,12 +210,16 @@ const Plan = () => {
     })
     edited[0].baseDate = baseDate
     setItinerary(edited)
-    localStorage.setItem('saved-itinerary', JSON.stringify(edited, null, 2))
+    localStorage.setItem(
+      `saved-itinerary-${planIndex}`,
+      JSON.stringify(edited, null, 2),
+    )
   }
   const editing = editingItem.index >= 0 || editingItem.index === 'new'
 
   return (
     <Layout editing={editing}>
+      <SwitchPlans value={planIndex} length={2} onChange={setPlanIndex} />
       <Itinerary
         items={filledItinerary}
         startDate={baseDate}
