@@ -2,7 +2,11 @@ import {useEffect, useState} from 'preact/hooks'
 
 const importData = async sourceUrl => {
   const data = await fetch(sourceUrl).then(res => res.text())
-  localStorage.setItem('saved-itinerary', data)
+  const backup = localStorage.getItem('saved-itinerary-0')
+  if (backup) {
+    localStorage.setItem('saved-itinerary-1', backup)
+  }
+  localStorage.setItem('saved-itinerary-0', data)
 }
 
 const Import = () => {
