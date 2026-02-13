@@ -1,4 +1,5 @@
-import {formatTime, getTimestamp, hoursOf} from './datetime'
+import {formatTime, getEndOfDay, getTimestamp, hoursOf} from './datetime'
+import iataTimeZone from './iataTimeZone'
 
 const startOfDay = (minutesOfJourney, base) =>
   minutesOfJourney - ((base + minutesOfJourney) % 1440)
@@ -50,6 +51,11 @@ const getDailyEvents = ({date}) => ({
   },
 })
 
+const getTimeZone = (data = {}) => {
+  const destinationAirport = data.transit?.at(-1)?.split(' ')[3]
+  return iataTimeZone[destinationAirport]
+}
+
 const expandItinerary = itinerary => {
   const defaultDate = getTimestamp(date => date.setMonth(date.getMonth() + 1))
   const departureDate = itinerary[0]?.date
@@ -69,10 +75,9 @@ const expandItinerary = itinerary => {
     : {date: returnDate, tags: ['return'], transit: []}
   const expanded = itinerary.reduce((items, event, index) => {
     const dayDuration = 86400000
-    const lastDate = getTimestamp(date => {
-      date.setTime(items.at(-1)?.date || event.date - dayDuration)
-      date.setHours(24, 0, -1, 0)
-    })
+    const lastEvent = items.at(-1)
+    const timeZone = getTimeZone(lastEvent) || lastEvent?.timeZone
+    const lastDate = getEndOfDay(lastEvent?.date || event.date - dayDuration, {timeZone})
     const fill = Array.from(
       {length: Math.ceil((event.date - lastDate) / dayDuration)},
       (_, index) => {
@@ -80,6 +85,7 @@ const expandItinerary = itinerary => {
         return {
           type: 'head',
           date,
+          timeZone,
           dailyEvents: getDailyEvents({date}),
         }
       },
@@ -87,7 +93,7 @@ const expandItinerary = itinerary => {
     const headIndex =
       fill.length > 0 ? items.length + fill.length - 1 : items.at(-1).headIndex
     const head = fill.at(-1) || items[headIndex]
-    const data = {...event, listIndex: index, headIndex}
+    const data = {...event, listIndex: index, headIndex, timeZone}
     if (head.dailyEvents?.[event.tags?.[0]]) {
       head.dailyEvents[event.tags[0]] = data
     }
@@ -102,7 +108,7 @@ const edit = (itinerary, {listIndex, index, ...values}) =>
     ? itinerary.slice(0, listIndex).concat(itinerary.slice(listIndex + 1))
     : itinerary
   )
-    .concat(values)
+    .concat(values.location || values.transit?.length > 0 ? values : [])
     .sort((a, b) => new Date(a.date) - new Date(b.date))
 
 

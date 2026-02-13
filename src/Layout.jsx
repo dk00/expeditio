@@ -2,6 +2,9 @@ import {css} from '@emotion/css'
 
 const layoutStyle = {
   '@media (orientation: portrait)': {
+    '> div:first-of-type': {
+      display: 'flex',
+    },
     '> div:last-of-type': {
       // edit detail, appear from bottom
       position: 'fixed',

@@ -193,10 +193,14 @@ const EditEventDetail = ({
         Location
         <input type="text" value={values.location} onInput={onChangeLocation} />
       </label>
-      {values.date && (
+      {values.date && values.tags.some(tag => /departure|return/.test(tag)) && (
         <label>
           Date
-          <input type="date" defaultValue={formatDate(values.date)} onChange={onChangeDate} />
+          <input
+            type="date"
+            defaultValue={formatDate(values.date)}
+            onChange={onChangeDate}
+          />
         </label>
       )}
       <Tags value={values.tags} onChange={onChangeTags} />
@@ -223,12 +227,8 @@ const EditEventDetail = ({
         </button>
       </div>
 
-      <pre>
-        {JSON.stringify(current, null, 2)}
-      </pre>
-      <pre>
-        {JSON.stringify(values, null, 2)}
-      </pre>
+      <pre>{JSON.stringify(current, null, 2)}</pre>
+      <pre>{JSON.stringify(values, null, 2)}</pre>
     </div>
   )
 }

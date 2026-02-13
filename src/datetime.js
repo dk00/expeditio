@@ -23,7 +23,7 @@ const formatTime = (date, {timeZone} = {}) => {
   return `${hours}:${minutes}`
 }
 
-const getTimestamp = (update) => {
+const getTimestamp = update => {
   const now = new Date()
   update(now)
   return now.getTime()
@@ -51,5 +51,21 @@ const hoursOf = (timestamp, ...args) => {
   return date.getTime()
 }
 
-export {formatDate, formatTime, getTimestamp, hoursOf}
+const getEndOfDay = (date, {timeZone} = {}) => {
+  const endOfDay = new Date(date)
+  const dateStr = [
+    new Intl.DateTimeFormat('en-US', {
+      dateStyle: 'short',
+      timeZone,
+    }).format(endOfDay),
+    '23:59:59',
+    new Intl.DateTimeFormat('en-US', {timeStyle: 'long', timeZone})
+      .formatToParts(endOfDay)
+      .find(part => part.type === 'timeZoneName')?.value,
+  ].join(' ')
+
+  return new Date(dateStr).getTime()
+}
+
+export {formatDate, formatTime, getTimestamp, hoursOf, getEndOfDay}
 export {updatedDate}

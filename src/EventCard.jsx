@@ -32,6 +32,7 @@ const Transit = ({routes}) => (
 // TODO support timezones
 const EventCard = ({
   date,
+  timeZone,
   class: className,
   location,
   tags = [],
@@ -53,7 +54,7 @@ const EventCard = ({
       {display.main && (
         <>
           <div class={css(timeStyle)}>
-            {formatTime(date)}
+            {formatTime(date, {timeZone})}
           </div>
           <div class={css(titleStyle)}>{location || '(New)'}</div>
         </>

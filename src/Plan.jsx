@@ -7,82 +7,12 @@ import EventCard from './EventCard'
 import {
   edit as editItinerary,
   expandItinerary,
-  getDailyItinerary,
   planTransit,
 } from './itinerary'
 import Layout from './Layout'
 import SuggestedEvent from './SuggestedEvent'
 import {updatedDate} from './datetime'
 import DayHeader from './DayHeader'
-
-const hourOfDay = (dayStart, hour) => dayStart + hour * 60
-
-const arrivalTime = ({date, duration}) => date + duration
-
-const suggestEssentials = (items, current) => {
-  const times = items.reduce((result, item) => {
-    const tags = item.tags || []
-    if (tags.includes('departure')) {
-      result.start = arrivalTime(item)
-    }
-    const meal = tags.find(tag => /breakfast|lunch|dinner/.test(tag))
-    if (meal) {
-      result[meal] = item.date
-    }
-    if (tags.includes('accommodation')) {
-      result.accommodation = item.date
-    }
-    if (tags.includes('return')) {
-      result.end = item.date
-    }
-    return result
-  }, {})
-
-  const essentials = [
-    {date: hourOfDay(current, 5), tags: ['breakfast']},
-    {date: hourOfDay(current, 12), tags: ['lunch']},
-    {date: hourOfDay(current, 19), tags: ['dinner']},
-    {date: hourOfDay(current, 23), tags: ['accommodation']},
-  ].filter(
-    item =>
-      !times[item.tags[0]] &&
-      !(item.date < times.start) &&
-      !(item.date > times.end),
-  )
-
-  return essentials.concat(items).sort((a, b) => a.date - b.date)
-}
-
-const getFilledItinerary = (itinerary, baseDate) =>
-  getDailyItinerary(itinerary, baseDate).reduce((last, day) => {
-    const items = suggestEssentials(day.items, day.date)
-    return last.concat({type: 'head', date: day.date}, items)
-  }, [])
-
-const FormattedDate = ({date, timezone}) => {
-  const now = new Date(date)
-  const month = now.toLocaleDateString('en', {
-    month: '2-digit',
-    timeZone: timezone,
-  })
-  const day = now.toLocaleDateString('en', {day: '2-digit', timeZone: timezone})
-  const weekday = now.toLocaleDateString('ja', {
-    weekday: 'short',
-    timeZone: timezone,
-  })
-
-  return `${month}-${day} ${weekday}`
-}
-
-const handleSlot = (
-  element,
-  {index, slotIndex, slotPlacement = 'replace', slotElement},
-) => (
-  <>
-    {index === slotIndex && slotElement}
-    {index === slotIndex && slotPlacement === 'replace' ? '' : element}
-  </>
-)
 
 const itineraryStyle = {
   h3: {
@@ -138,6 +68,7 @@ const tryLoad = ({index = 0} = {}) => {
 const switchPlansStyle = {
   button: {
     margin: '0.1rem 0',
+    flex: '0 0 3rem',
     width: '100%',
     border: 'none',
     textAlign: 'center',

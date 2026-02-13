@@ -52,9 +52,9 @@ const FormattedDate = ({date, timezone}) => {
   return `${month}-${day} ${weekday}`
 }
 
-const DayHeader = ({date, dailyEvents, onClick}) => (
+const DayHeader = ({date, timeZone, dailyEvents, onClick}) => (
   <h3 class={css(styles)} data-date={date}>
-    <FormattedDate date={date} />
+    <FormattedDate date={date} timezone={timeZone} />
     <button
       type="button"
       onClick={event => onClick(event, dailyEvents.activity)}

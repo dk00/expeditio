@@ -37,7 +37,7 @@ const editingStyle = {
 }
 
 const EditingEvent = ({
-  value: { defaultDate, date = defaultDate, location, transit},
+  value: { defaultDate, date = defaultDate, location, transit, timeZone },
   onChange,
 }) => {
   const [position, setPosition] = useState('')
@@ -50,7 +50,6 @@ const EditingEvent = ({
       ref.current.positionDate = getTimePosition(
         event.currentTarget.parentElement,
       )
-      window.debugValue = ref.current.positionDate
     }
     ref.current.startY = event.clientY - (position.y || 0)
   }
@@ -72,6 +71,7 @@ const EditingEvent = ({
     <EventCard
       class={css(editingStyle, {transform: `translateY(${position.y || 0}px)`})}
       date={editedDate || date}
+      timeZone={timeZone}
       location={location}
       transit={transit}
       onPointerDown={handleDrag}
