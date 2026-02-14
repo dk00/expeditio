@@ -15,12 +15,17 @@ const formatTime = (date, {timeZone} = {}) => {
     hour: '2-digit',
     minute: '2-digit',
   }
-  const parts = new Intl.DateTimeFormat('en-US', formatOptions).formatToParts(
-    new Date(date),
-  )
-  const hours = parts.find(p => p.type === 'hour').value
-  const minutes = parts.find(p => p.type === 'minute').value
-  return `${hours}:${minutes}`
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', formatOptions).formatToParts(
+      new Date(date),
+    )
+    const hours = parts.find(p => p.type === 'hour').value
+    const minutes = parts.find(p => p.type === 'minute').value
+    return `${hours}:${minutes}`
+  } catch (error) {
+    console.error('Failed to format time', {date, timeZone}, error)
+    return '-:-'
+  }
 }
 
 const getTimestamp = update => {
@@ -67,5 +72,21 @@ const getEndOfDay = (date, {timeZone} = {}) => {
   return new Date(dateStr).getTime()
 }
 
-export {formatDate, formatTime, getTimestamp, hoursOf, getEndOfDay}
+const getTimeOfDate = (date, {formattedTime = '00:00:00', timeZone} = {}) => {
+  const dateObject = new Date(date)
+  const dateString = [
+    new Intl.DateTimeFormat('en-US', {
+      dateStyle: 'short',
+      timeZone,
+    }).format(dateObject),
+    formattedTime ,
+    new Intl.DateTimeFormat('en-US', {timeStyle: 'long', timeZone})
+      .formatToParts(dateObject)
+      .find(part => part.type === 'timeZoneName')?.value,
+  ].join(' ')
+
+  return new Date(dateString).getTime()
+}
+
+export {formatDate, formatTime, getTimestamp, hoursOf, getEndOfDay, getTimeOfDate}
 export {updatedDate}

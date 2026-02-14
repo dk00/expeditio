@@ -189,10 +189,16 @@ const EditEventDetail = ({
 
   return (
     <div class={css(editStyle)}>
+      {!values.transit && (
       <label>
         Location
-        <input type="text" value={values.location} onInput={onChangeLocation} />
+          <input
+            type="text"
+            value={values.location}
+            onInput={onChangeLocation}
+          />
       </label>
+      )}
       {values.date && values.tags.some(tag => /departure|return/.test(tag)) && (
         <label>
           Date
@@ -203,7 +209,7 @@ const EditEventDetail = ({
           />
         </label>
       )}
-      <Tags value={values.tags} onChange={onChangeTags} />
+      {!values.transit && <Tags value={values.tags} onChange={onChangeTags} />}
       {values.transit ? (
         <EditTransit
           startDate={startDate}
@@ -226,9 +232,6 @@ const EditEventDetail = ({
           ✅
         </button>
       </div>
-
-      <pre>{JSON.stringify(current, null, 2)}</pre>
-      <pre>{JSON.stringify(values, null, 2)}</pre>
     </div>
   )
 }

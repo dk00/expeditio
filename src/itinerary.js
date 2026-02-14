@@ -1,4 +1,4 @@
-import {formatTime, getEndOfDay, getTimestamp, hoursOf} from './datetime'
+import {formatTime, getEndOfDay, getTimeOfDate, getTimestamp} from './datetime'
 import iataTimeZone from './iataTimeZone'
 
 const startOfDay = (minutesOfJourney, base) =>
@@ -28,25 +28,30 @@ const getDailyItinerary = (itinerary, baseDate) => {
   }, [])
 }
 
-const getDailyEvents = ({date}) => ({
+const getDailyEvents = ({date, timeZone}) => ({
   breakfast: {
-    defaultDate: hoursOf(date, 6, 30, 0, 0),
+    defaultDate: getTimeOfDate(date, {formattedTime: '06:30:00', timeZone}),
+    timeZone,
     tags: ['breakfast'],
   },
   activity: {
-    defaultDate: hoursOf(date, 9, 0, 0, 0),
-    tags: [],
+    defaultDate: getTimeOfDate(date, {formattedTime: '09:00:00', timeZone}),
+    timeZone,
+    tags: ['activity'], // TODO auto time for next available slot
   },
   lunch: {
-    defaultDate: hoursOf(date, 11, 30, 0, 0),
+    defaultDate: getTimeOfDate(date, {formattedTime: '11:30:00', timeZone}),
+    timeZone,
     tags: ['lunch'],
   },
   dinner: {
-    defaultDate: hoursOf(date, 18, 30, 0, 0),
+    defaultDate: getTimeOfDate(date, {formattedTime: '18:30:00', timeZone}),
+    timeZone,
     tags: ['dinner'],
   },
   accommodation: {
-    defaultDate: hoursOf(date, 21, 30, 0, 0),
+    defaultDate: getTimeOfDate(date, {formattedTime: '21:30:00', timeZone}),
+    timeZone,
     tags: ['accommodation'],
   },
 })
@@ -77,7 +82,9 @@ const expandItinerary = itinerary => {
     const dayDuration = 86400000
     const lastEvent = items.at(-1)
     const timeZone = getTimeZone(lastEvent) || lastEvent?.timeZone
-    const lastDate = getEndOfDay(lastEvent?.date || event.date - dayDuration, {timeZone})
+    const lastDate = getEndOfDay(lastEvent?.date || event.date - dayDuration, {
+      timeZone,
+    })
     const fill = Array.from(
       {length: Math.ceil((event.date - lastDate) / dayDuration)},
       (_, index) => {
@@ -86,7 +93,7 @@ const expandItinerary = itinerary => {
           type: 'head',
           date,
           timeZone,
-          dailyEvents: getDailyEvents({date}),
+          dailyEvents: getDailyEvents({date, timeZone}),
         }
       },
     )
@@ -103,14 +110,27 @@ const expandItinerary = itinerary => {
   return [].concat(hintDeparture, expanded, hintReturn).filter(Boolean)
 }
 
+const withTransitDate = values => {
+  const departureDate = getTimeOfDate(values.date, {
+    formattedTime: values.transit[0].split(' ')[0],
+    timeZone: values.timeZone,
+  })
+  return {...values, date: departureDate}
+}
+
 const edit = (itinerary, {listIndex, index, ...values}) =>
   (listIndex >= 0
     ? itinerary.slice(0, listIndex).concat(itinerary.slice(listIndex + 1))
     : itinerary
   )
-    .concat(values.location || values.transit?.length > 0 ? values : [])
+    .concat(
+      values.transit?.length > 0
+        ? withTransitDate(values)
+        : values.location
+          ? values
+          : [],
+    )
     .sort((a, b) => new Date(a.date) - new Date(b.date))
-
 
 const planTransit = (itinerary, {editing}) => {
   const previous = itinerary[editing.index - 1]

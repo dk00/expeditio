@@ -30,7 +30,7 @@ const Itinerary = ({items, slotIndex, children, onEdit, onCreate}) => (
     {items.map((item, index) =>
       slotIndex && (slotIndex === item.index || slotIndex === index) ? (
         children
-      ) : item.location ? (
+      ) : (item.location || item.transit) ? (
         <EventCard {...item} onClick={() => onEdit(item, index)} />
       ) : item.type === 'head' ? (
         <DayHeader {...item} onClick={(_, data) => onCreate(data)} />
