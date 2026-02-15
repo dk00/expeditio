@@ -1,4 +1,4 @@
-import {formatTime, getEndOfDay, getTimeOfDate, getTimestamp} from './datetime'
+import {formatTime, getTimeOfDate, getTimestamp} from './datetime'
 import iataTimeZone from './iataTimeZone'
 
 const startOfDay = (minutesOfJourney, base) =>
@@ -28,6 +28,7 @@ const getDailyItinerary = (itinerary, baseDate) => {
   }, [])
 }
 
+//TODO infer breakfast/lunch/dinner by time
 const getDailyEvents = ({date, timeZone}) => ({
   breakfast: {
     defaultDate: getTimeOfDate(date, {formattedTime: '06:30:00', timeZone}),
@@ -58,7 +59,7 @@ const getDailyEvents = ({date, timeZone}) => ({
 
 const getTimeZone = (data = {}) => {
   const destinationAirport = data.transit?.at(-1)?.split(' ')[3]
-  return iataTimeZone[destinationAirport]
+  return iataTimeZone[destinationAirport] || data.timeZone
 }
 
 const expandItinerary = itinerary => {
@@ -81,22 +82,25 @@ const expandItinerary = itinerary => {
   const expanded = itinerary.reduce((items, event, index) => {
     const dayDuration = 86400000
     const lastEvent = items.at(-1)
-    const timeZone = getTimeZone(lastEvent) || lastEvent?.timeZone
-    const lastDate = getEndOfDay(lastEvent?.date || event.date - dayDuration, {
-      timeZone,
-    })
-    const fill = Array.from(
-      {length: Math.ceil((event.date - lastDate) / dayDuration)},
-      (_, index) => {
-        const date = lastDate + 1000 + index * dayDuration
-        return {
-          type: 'head',
-          date,
-          timeZone,
-          dailyEvents: getDailyEvents({date, timeZone}),
-        }
-      },
+    const timeZone = getTimeZone(lastEvent)
+    const previousDay = getTimeOfDate(
+      lastEvent?.date || event.date - dayDuration,
+      {timeZone: lastEvent?.timeZone, formattedTime: '00:00:00'},
     )
+    const currentDay = getTimeOfDate(event.date, {
+      formattedTime: '00:00:00',
+      timeZone: getTimeZone(lastEvent),
+    })
+    const fillLength = Math.ceil((currentDay - previousDay) / dayDuration)
+    const fill = Array.from({length: fillLength}, (_, index) => {
+      const date = currentDay + dayDuration * (1 + index - fillLength)
+      return {
+        type: 'head',
+        date,
+        timeZone,
+        dailyEvents: getDailyEvents({date, timeZone}),
+      }
+    })
     const headIndex =
       fill.length > 0 ? items.length + fill.length - 1 : items.at(-1).headIndex
     const head = fill.at(-1) || items[headIndex]
@@ -148,7 +152,9 @@ const planTransit = (itinerary, {editing}) => {
     index: 'new',
     tags: ['transit'],
     transit: [
-      `${formatTime(arrival - 30 * 60 * 1000)} ${from} - ${destination} ${formatTime(arrival)}`,
+      `${formatTime(
+        arrival - 30 * 60 * 1000,
+      )} ${from} - ${destination} ${formatTime(arrival)}`,
     ],
   }
 }

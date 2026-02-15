@@ -1,19 +1,20 @@
 {
-	"linter": {
-		"includes": ["src/**/*.jsx", "src/**/*.js"],
-		"rules": {
-			"correctness": {
-				"noUndeclaredVariables": "error"
-			}
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"indentStyle": "space",
-			"semicolons": "asNeeded",
-			"bracketSpacing": false,
-			"quoteStyle": "single",
-			"arrowParentheses": "asNeeded"
-		}
-	}
+  "linter": {
+    "rules": {
+      "correctness": {
+        "noUndeclaredVariables": "error"
+      }
+    }
+  },
+  "formatter": {
+    "indentStyle": "space"
+  },
+  "javascript": {
+    "formatter": {
+      "semicolons": "asNeeded",
+      "bracketSpacing": false,
+      "quoteStyle": "single",
+      "arrowParentheses": "asNeeded"
+    }
+  }
 }
