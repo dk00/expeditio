@@ -91,7 +91,8 @@ const expandItinerary = itinerary => {
       formattedTime: '00:00:00',
       timeZone: getTimeZone(lastEvent),
     })
-    const fillLength = Math.ceil((currentDay - previousDay) / dayDuration)
+    //TODO should be mostly correct, but still need to handle travel to backward timezone
+    const fillLength = Math.round((currentDay - previousDay) / dayDuration)
     const fill = Array.from({length: fillLength}, (_, index) => {
       const date = currentDay + dayDuration * (1 + index - fillLength)
       return {
