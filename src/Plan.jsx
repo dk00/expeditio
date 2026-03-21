@@ -18,10 +18,6 @@ const itineraryStyle = {
   h3: {
     margin: 0,
     padding: '0.5em',
-    button: {
-      marginLeft: '0.5em',
-      fontSize: '100%',
-    },
   },
 }
 

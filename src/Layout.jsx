@@ -5,6 +5,9 @@ const layoutStyle = {
     '> div:first-of-type': {
       display: 'flex',
     },
+    '> div:nth-of-type(2)': {
+      paddingBottom: '5em',
+    },
     '> div:last-of-type': {
       // edit detail, appear from bottom
       position: 'fixed',

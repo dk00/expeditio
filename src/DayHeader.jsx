@@ -3,11 +3,13 @@ import {css} from '@emotion/css'
 const styles = {
   button: {
     position: 'relative',
+    margin: '0 0.125em',
     padding: '0.5em',
     border: 'none',
     borderRadius: '1em',
     lineHeight: 1.2,
     fontSize: '100%',
+    color: '#ccc',
     background: '#333',
     ':after': {
       position: 'absolute',
