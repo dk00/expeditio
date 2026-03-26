@@ -1,9 +1,11 @@
 import {css} from '@emotion/css'
-import { formatTime } from './datetime'
+import {formatTime} from './datetime'
 
 const cardStyle = {
   margin: '0.5em',
   padding: '1em',
+  minWidth: '0',
+  maxWidth: 'calc(100vw - 2em)',
   display: 'flex',
   flexWrap: 'wrap',
   alignItems: 'center',
@@ -13,12 +15,17 @@ const cardStyle = {
 
 const timeStyle = {
   color: '#f59',
+  fontSize: '1.1em',
 }
 
 const titleStyle = {
-  margin: '0 0.5em',
+  margin: '0 0.25em',
+  flex: '0 1 82%',
   fontSize: '120%',
   fontWeight: 'bold',
+  '> span:not(:empty)': {
+    margin: '0 0.25em',
+  }
 }
 
 const Transit = ({routes}) => (
@@ -27,6 +34,18 @@ const Transit = ({routes}) => (
       <div>{route}</div>
     ))}
   </div>
+)
+
+const TagIcon = ({tags = []}) => (
+  <span>
+    {tags.includes('breakfast')
+      ? '🥪'
+      : tags.includes('lunch') || tags.includes('dinner')
+        ? '🍽️'
+        : tags.includes('accommodation')
+          ? '🏨'
+          : ''}
+  </span>
 )
 
 // TODO support timezones
@@ -53,10 +72,11 @@ const EventCard = ({
       {display.transit === 'before' && <Transit routes={transit} />}
       {display.main && (
         <>
-          <div class={css(timeStyle)}>
-            {formatTime(date, {timeZone})}
+          <div class={css(timeStyle)}>{formatTime(date, {timeZone})}</div>
+          <div class={css(titleStyle)}>
+            <TagIcon tags={tags} />
+            {location || '(New)'}
           </div>
-          <div class={css(titleStyle)}>{location || '(New)'}</div>
         </>
       )}
       {display.transit === 'after' && <Transit routes={transit} />}

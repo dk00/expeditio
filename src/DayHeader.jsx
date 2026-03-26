@@ -46,7 +46,7 @@ const FormattedDate = ({date, timezone}) => {
     timeZone: timezone,
   })
   const day = now.toLocaleDateString('en', {day: '2-digit', timeZone: timezone})
-  const weekday = now.toLocaleDateString('ja', {
+  const weekday = now.toLocaleDateString('en', {
     weekday: 'short',
     timeZone: timezone,
   })
@@ -61,7 +61,7 @@ const DayHeader = ({date, timeZone, dailyEvents, onClick}) => (
       type="button"
       onClick={event => onClick(event, dailyEvents.activity)}
     >
-      + Event
+      +
     </button>
     <button
       type="button"

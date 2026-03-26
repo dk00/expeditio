@@ -73,7 +73,7 @@ const getEndOfDay = (date, {timeZone} = {}) => {
 }
 
 const getTimeOfDate = (date, {formattedTime = '00:00:00', timeZone} = {}) => {
-  const dateObject = new Date(date)
+  const dateObject = new Date(date || Date.now())
   const dateString = [
     new Intl.DateTimeFormat('en-US', {
       dateStyle: 'short',
