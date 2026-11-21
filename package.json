@@ -1,20 +1,20 @@
 {
   "name": "expeditio",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "build": "export NODE_NO_WARNINGS=1 && rsbuild build",
-    "dev": "export NODE_NO_WARNINGS=1 && rsbuild dev",
-    "preview": "export NODE_NO_WARNINGS=1 && rsbuild preview"
+    "dev": "vite",
+    "build": "vite build"
   },
   "dependencies": {
     "@emotion/css": "^11.13.5",
-    "preact": "^10.27.2"
+    "preact": "^11.2.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
-    "@rsbuild/core": "^1.5.12",
-    "@rsbuild/plugin-preact": "^1.5.2"
+    "@preact/preset-vite": "^2.10.6",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.8"
   }
 }
