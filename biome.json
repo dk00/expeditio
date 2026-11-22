@@ -2,6 +2,7 @@
 	"linter": {
 		"includes": ["src/**/*.jsx", "src/**/*.js"],
 		"rules": {
+      "a11y": "info",
 			"correctness": {
 				"noUndeclaredVariables": "error"
 			}
@@ -15,5 +16,12 @@
 			"quoteStyle": "single",
 			"arrowParentheses": "asNeeded"
 		}
-	}
+	},
+	  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  }
 }

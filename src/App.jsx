@@ -1,7 +1,4 @@
 import {useEffect, useState} from 'react'
-
-import Import from './Import'
-import Markdown from './Markdown'
 import Plan from './Plan'
 
 const App = () => {
@@ -12,12 +9,6 @@ const App = () => {
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  if (path === '/export-markdown') {
-    return <Markdown />
-  }
-  if (path === '/import') {
-    return <Import />
-  }
   return <Plan />
 }
 

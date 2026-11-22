@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@emotion/css": "^11.13.5",
+    "idb-keyval": "^6.3.0",
     "preact": "^11.2.0"
   },
   "devDependencies": {

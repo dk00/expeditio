@@ -1,248 +1,197 @@
 import {css} from '@emotion/css'
-import {useState} from 'preact/hooks'
+import {useState, useReducer, useEffect} from 'preact/hooks'
 
-import EditEventDetail from './EditEventDetail'
-import EditingEvent from './EditingEvent'
-import EventCard from './EventCard'
-import {edit as editItinerary, getDailyItinerary, planTransit} from './itinerary'
-import SuggestedEvent from './SuggestedEvent'
+import {loadTrip, reduceEdit, getEdited, saveTrip} from './trip'
+import EditForm from './EditForm'
+import Draggable from './Draggable'
 
-const hourOfDay = (dayStart, hour) => dayStart + hour * 60
-
-const arrivalTime = ({date, duration}) => date + duration
-
-const suggestEssentials = (items, current) => {
-  const times = items.reduce((result, item) => {
-    const tags = item.tags || []
-    if (tags.includes('departure')) {
-      result.start = arrivalTime(item)
-    }
-    const meal = tags.find(tag => /breakfast|lunch|dinner/.test(tag))
-    if (meal) {
-      result[meal] = item.date
-    }
-    if (tags.includes('accommodation')) {
-      result.accommodation = item.date
-    }
-    if (tags.includes('return')) {
-      result.end = item.date
-    }
-    return result
-  }, {})
-
-  const essentials = [
-    {date: hourOfDay(current, 5), tags: ['breakfast']},
-    {date: hourOfDay(current, 12), tags: ['lunch']},
-    {date: hourOfDay(current, 19), tags: ['dinner']},
-    {date: hourOfDay(current, 23), tags: ['accommodation']},
-  ].filter(
-    item =>
-      !times[item.tags[0]] &&
-      !(item.date < times.start) &&
-      !(item.date > times.end),
-  )
-
-  return essentials.concat(items).sort((a, b) => a.date - b.date)
-}
-
-const getFilledItinerary = (itinerary, baseDate) =>
-  getDailyItinerary(itinerary, baseDate).reduce((last, day) => {
-    const items = suggestEssentials(day.items, day.date)
-    return last.concat({type: 'head', date: day.date}, items)
-  }, [])
-
-const FormattedDate = ({startDate, date}) => {
-  const now = new Date(startDate)
-  now.setMinutes(now.getMinutes() + date)
-  const weekday = now.toLocaleDateString('ja', {weekday: 'short'})
-  return `${now.getMonth() + 1}-${now.getDate()} ${weekday}`
-}
-
-const handleSlot = (
-  element,
-  {index, slotIndex, slotPlacement = 'replace', slotElement},
-) => (
-  <>
-    {index === slotIndex && slotElement}
-    {index === slotIndex && slotPlacement === 'replace' ? '' : element}
-  </>
-)
-
-const itineraryStyle = {
-  h3: {
-    margin: 0,
-    padding: '0.5em',
-    button: {
-      marginLeft: '0.5em',
-      fontSize: '100%',
-    },
+const actionsStyle = {
+  position: 'fixed',
+  bottom: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+  '> button, input': {
+    margin: '0 0.5em 0.5em',
+    fontSize: '1.5em',
+  },
+  '> button': {
+    padding: '0.25em',
+    background: '#c60',
+    border: 'none',
+    borderRadius: '0.5em',
   },
 }
 
-const Itinerary = ({
-  items,
-  startDate,
-  slotIndex,
-  slotPlacement = 'replace',
-  children,
-  onEdit,
-  onCreate,
-}) => (
-  <div class={css(itineraryStyle)}>
-    {items.map((item, index) =>
-      handleSlot(
-        item.type === 'head' ? (
-          <h3 data-date={hourOfDay(item.date, 5)}>
-            <FormattedDate startDate={startDate} date={item.date} />
+const PlanActions = ({editing, onCreate, onChange, onCancel, onSave}) => {
+  const [action, setAction] = useState('top')
+  const overideAction = editing ? 'edit' : action
+
+  return (
+    <div class={css(actionsStyle)}>
+      {editing ? (
+        <EditForm
+          editing={editing}
+          onChange={onChange}
+          onCancel={onCancel}
+          onSave={onSave}
+        />
+      ) : (
+        overideAction === 'top' && (
+          <>
+            <button type="button" aria-label="New Trip" onClick={onCreate}>
+              ✨
+            </button>
+            <button type="button" onClick={() => setAction('list')}>
+              📋
+            </button>
+          </>
+        )
+      )}
+    </div>
+  )
+}
+
+const Schedule = ({data, editing, replacedNode, onEdit}) => (
+  <div>
+    {data.map((item, index) => (
+      <>
+        {index === editing?.index && editing.mode !== 'insert' ? (
+          replacedNode
+        ) : item.date ? (
+          <h3 onClick={event => onEdit(event, {index})}>
+            {item.date} {item.remark}{' '}
             <button
               type="button"
-              onClick={() =>
-                onCreate({
-                  defaultDate: hourOfDay(item.date, 10),
-                  date: hourOfDay(item.date, 10),
-                  index: 'new',
-                  tags: ['event'],
-                })
-              }
+              onClick={event => {
+                event.stopPropagation()
+                onEdit(event, {type: 'add-event', index: index})
+              }}
             >
-              + Event
+              ＋
             </button>
           </h3>
-        ) : item.location ? (
-          <EventCard
-            startDate={startDate}
-            {...item}
-            onClick={() => onEdit(item, index)}
-          />
         ) : (
-          <SuggestedEvent {...item} onClick={() => onCreate(item, index)} />
-        ),
-        {
-          index: item.index || index,
-          slotIndex,
-          slotPlacement,
-          slotElement: children,
-        },
-      ),
-    )}
+          <div onClick={event => onEdit(event, {index})}>
+            {item.type} {item.time} {item.place} {item.toPlace && ' - '}{' '}
+            {item.toPlace} {item.arriveAt} {item.note}
+          </div>
+        )}
+        {index === editing?.index && editing.mode === 'insert' && replacedNode}
+      </>
+    ))}
+    {editing?.index + 1 > data.length && replacedNode}
+    <button
+      type="button"
+      onClick={event => onEdit(event, {type: 'add-day', index: data.length})}
+    >
+      ＋
+    </button>
   </div>
 )
 
-const addNewPlaceholder = (itinerary, editingItem) => {
-  if (editingItem.index !== 'new') {
-    return itinerary
-  }
-  const insertAt = itinerary
-    .concat({date: Infinity})
-    .findIndex(item => item.date >= editingItem.defaultDate)
-
-  return itinerary
-    .slice(0, insertAt)
-    .concat(editingItem)
-    .concat(itinerary.slice(insertAt))
+const getTime = (prev = {time: '06:00 '}, next = {time: '23:30'}, ratio) => {
+  const prevTime = (prev.time || '06:00').split(':').map(Number)
+  const nextTime = next.time.split(':').map(Number)
+  const prevMinutes = prevTime[0] * 60 + prevTime[1]
+  const nextMinutes = nextTime[0] * 60 + nextTime[1]
+  const movedMinutes = prevMinutes + (nextMinutes - prevMinutes) * ratio
+  const hours = Math.floor(movedMinutes / 60)
+  const minutes = Math.floor(movedMinutes % 60)
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
 
-const tryLoad = () => {
-  try {
-    return JSON.parse(localStorage.savedItinerary)
-  } catch (e) {}
-}
-
-const layoutStyle = {
-  '@media (orientation: portrait)': {
-    '> div:last-of-type': {
-      // edit detail, appear from bottom
-      position: 'fixed',
-      bottom: 0,
-      transform: 'translateY(100%)',
-      transition: 'transform 0.3s ease-in-out',
-    },
-  },
-  '@media (orientation: landscape)': {
-    display: 'flex',
-    '> div:first-of-type': {
-      // itinerary, left side
-      flex: '0 0 62%',
-    },
-    '> div:last-of-type': {
-      // edit detail, right side
-      position: 'sticky',
-      top: '5em',
-      flex: '1',
-      alignSelf: 'flex-start',
-    },
-  },
-}
-
-const editingStyle = {
-  '@media (orientation: portrait)': {
-    '> div:last-of-type': {
-      transform: 'translateY(0)',
-    },
-  },
-}
-
-// TODO empty state
-const Plan = () => {
-  const [itinerary, setItinerary] = useState(() => tryLoad())
-  const baseDate = itinerary[0]?.baseDate
-  const [editingItem, setEditingItem] = useState({})
-  const filledItinerary = addNewPlaceholder(
-    getFilledItinerary(itinerary, baseDate),
-    editingItem,
+const getMovedTime = (event, {y, data}) => {
+  const position = event.currentTarget.offsetTop + y
+  window.debugNode = event.currentTarget
+  const nodes = [].concat(
+    Array.from(event.currentTarget.parentElement.children),
+    {offsetTop: position + 50},
   )
+  const nextIndex = nodes.findIndex(node => node.offsetTop >= position)
+  const length = nodes[nextIndex].offsetTop - nodes[nextIndex - 1].offsetTop
+  const ratio = (position - nodes[nextIndex - 1].offsetTop) / length
+  return getTime(data[nextIndex - 1], data[nextIndex], ratio)
+}
 
-  const onCreate = (item, index = 'new') => {
-    console.debug('create', item)
-    setEditingItem({...item, index})
+const EditingEvent = ({editing, data}) => {
+  const [movedTime, setMovedTime] = useState(() => getEdited(editing, 'time'))
+  const changeTime = (event, {y, state}) => {
+    setMovedTime(getMovedTime(event, {y, data}))
   }
-  const onEdit = (item, index) => {
-    console.debug('edit', item, index)
-    setEditingItem({...item, index})
-  }
-  const onPlanTransit = () =>
-    setEditingItem(
-      planTransit(filledItinerary, {editing: editingItem, startDate: baseDate}),
-    )
-  const onChange = (_event, {name, value}) =>
-    setEditingItem({...editingItem, [name]: value})
 
-  const onCancel = () => setEditingItem({})
-  const onSave = values => {
-    console.debug('save', values)
-    setEditingItem({})
-    const edited = editItinerary(itinerary, {...editingItem, ...values})
-    edited[0].baseDate = baseDate
-    setItinerary(edited)
-    localStorage.savedItinerary = JSON.stringify(edited, null, 2)
+  return getEdited(editing, 'date') ? (
+    <h3 class={css({backgroundColor: '#732  '})}>
+      {getEdited(editing, 'date')} {getEdited(editing, 'remark')}
+    </h3>
+  ) : (
+    <Draggable onChange={changeTime}>
+      <div class={css({backgroundColor: '#a55'})}>
+        {getEdited(editing, 'type')} {movedTime}
+        {getEdited(editing, 'place')}
+        {getEdited(editing, 'toPlace') && ' - '}
+        {getEdited(editing, 'toPlace')} {getEdited(editing, 'arriveAt')}
+        {getEdited(editing, 'note')}
+      </div>
+    </Draggable>
+  )
+}
+
+const Plan = () => {
+  const [collection, setCollection] = useState(() => ({}))
+  const [tripData, setTripData] = useState()
+  const [editing, dispatch] = useReducer(reduceEdit)
+  useEffect(() => {
+    loadTrip(collection.viewingTrip).then(({trips, viewingTrip, data}) => {
+      setCollection({trips, viewingTrip})
+      setTripData(data)
+    })
+  }, [collection.viewingTrip])
+  const create = () => dispatch({type: 'new'})
+  const edit = (_event, options) =>
+    dispatch({
+      type: options.type || 'start',
+      index: options.index,
+      initial: tripData[options.index],
+      tripData,
+    })
+  const change = event =>
+    dispatch({
+      type: 'change',
+      key: event.target.name,
+      value: event.target.value,
+    })
+  const cancel = () => dispatch({type: 'clear'})
+  const save = () => {
+    dispatch({type: 'clear'})
+    saveTrip(tripData, editing)
   }
-  const editing = editingItem.index >= 0 || editingItem.index === 'new'
+  const currentTripData = editing?.newTrip || tripData
 
   return (
-    <div class={css(layoutStyle, editing && editingStyle)}>
-      <Itinerary
-        items={filledItinerary}
-        startDate={baseDate}
-        slotIndex={editingItem.index}
-        onCreate={onCreate}
-        onEdit={onEdit}
-      >
-        {editingItem.index != null && (
-          <EditingEvent
-            key={editingItem.index}
-            startDate={baseDate}
-            value={editingItem}
-            onChange={onChange}
-          />
-        )}
-      </Itinerary>
-      <EditEventDetail
-        startDate={baseDate}
-        current={editingItem}
-        onChange={onChange}
-        onPlanTransit={onPlanTransit}
-        onCancel={onCancel}
-        onSave={onSave}
+    <div>
+      {currentTripData ? (
+        <Schedule
+          data={currentTripData}
+          editing={editing}
+          replacedNode={
+            editing?.index >= 0 && (
+              <EditingEvent editing={editing} data={tripData} />
+            )
+          }
+          onEdit={edit}
+        />
+      ) : (
+        'click to create new trip'
+      )}
+      <PlanActions
+        collection={collection}
+        editing={editing}
+        onCreate={create}
+        onChange={change}
+        onCancel={cancel}
+        onSave={save}
       />
     </div>
   )
