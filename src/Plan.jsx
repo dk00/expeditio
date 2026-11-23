@@ -73,7 +73,7 @@ const Schedule = ({data, editing, replacedNode, onEdit}) => (
             </button>
           </h3>
         ) : (
-          <div onClick={event => onEdit(event, {index})}>
+          <div data-time={item.time} onClick={event => onEdit(event, {index})}>
             {item.type} {item.time} {item.place} {item.toPlace && ' - '}{' '}
             {item.toPlace} {item.arriveAt} {item.note}
           </div>
@@ -91,42 +91,51 @@ const Schedule = ({data, editing, replacedNode, onEdit}) => (
   </div>
 )
 
-const getTime = (prev = {time: '06:00 '}, next = {time: '23:30'}, ratio) => {
-  const prevTime = (prev.time || '06:00').split(':').map(Number)
-  const nextTime = next.time.split(':').map(Number)
-  const prevMinutes = prevTime[0] * 60 + prevTime[1]
-  const nextMinutes = nextTime[0] * 60 + nextTime[1]
-  const movedMinutes = prevMinutes + (nextMinutes - prevMinutes) * ratio
-  const hours = Math.floor(movedMinutes / 60)
-  const minutes = Math.floor(movedMinutes % 60)
+const getMinutes = time => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+const formatTime = next => {
+  const hours = Math.floor(next / 60)
+  const minutes = Math.floor(next % 60)
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
 
-const getMovedTime = (event, {y, data}) => {
+const getMovedTime = (event, {y}) => {
   const position = event.currentTarget.offsetTop + y
-  window.debugNode = event.currentTarget
   const nodes = [].concat(
     Array.from(event.currentTarget.parentElement.children),
-    {offsetTop: position + 50},
+    {offsetTop: event.currentTarget.offsetTop + 80},
   )
-  const nextIndex = nodes.findIndex(node => node.offsetTop >= position)
-  const length = nodes[nextIndex].offsetTop - nodes[nextIndex - 1].offsetTop
-  const ratio = (position - nodes[nextIndex - 1].offsetTop) / length
-  return getTime(data[nextIndex - 1], data[nextIndex], ratio)
+  const index = nodes.findIndex(node => node.offsetTop >= position) - 1
+  const prevNode = nodes[index]
+  const nextNode = nodes[index + 1]
+  const length = nextNode.offsetTop - prevNode.offsetTop
+  const ratio = (position - prevNode.offsetTop) / length
+  const prevTime = getMinutes(prevNode.dataset?.time || '02:00')
+  const duration = getMinutes(nextNode.dataset?.time || '23:30') - prevTime
+  const moved = Math.round(duration * ratio /10) * 10
+
+  return [index,formatTime(prevTime + moved)]
 }
 
-const EditingEvent = ({editing, data}) => {
+const EditingEvent = ({editing, onMove}) => {
   const [movedTime, setMovedTime] = useState(() => getEdited(editing, 'time'))
   const changeTime = (event, {y, state}) => {
-    setMovedTime(getMovedTime(event, {y, data}))
+    const [index, time] = getMovedTime(event, {y})
+    setMovedTime(time)
+    if (state === 'end') {
+      onMove?.(event, {time, index})
+    }
   }
 
   return getEdited(editing, 'date') ? (
-    <h3 class={css({backgroundColor: '#732  '})}>
+    <h3 class={css({backgroundColor: '#732'})}>
       {getEdited(editing, 'date')} {getEdited(editing, 'remark')}
     </h3>
   ) : (
-    <Draggable onChange={changeTime}>
+    <Draggable data-time={editing.initial?.time} onChange={changeTime}>
       <div class={css({backgroundColor: '#a55'})}>
         {getEdited(editing, 'type')} {movedTime}
         {getEdited(editing, 'place')}
@@ -162,10 +171,16 @@ const Plan = () => {
       key: event.target.name,
       value: event.target.value,
     })
+  const move = (_event, options) =>
+    dispatch({
+      type: 'move',
+      index: options.index,
+      time: options.time,
+    })
   const cancel = () => dispatch({type: 'clear'})
-  const save = () => {
+  const save = async () => {
     dispatch({type: 'clear'})
-    saveTrip(tripData, editing)
+    setTripData(await saveTrip(tripData, editing))
   }
   const currentTripData = editing?.newTrip || tripData
 
@@ -177,7 +192,7 @@ const Plan = () => {
           editing={editing}
           replacedNode={
             editing?.index >= 0 && (
-              <EditingEvent editing={editing} data={tripData} />
+              <EditingEvent editing={editing} onMove={move} />
             )
           }
           onEdit={edit}

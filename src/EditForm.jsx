@@ -4,6 +4,7 @@ const isDate = editing => 'date' in editing.initial || 'date' in editing.changed
 
 const EditForm = ({editing, onChange, onCancel, onSave}) => (
   <form
+    autocomplete="off"
     onSubmit={event => {
       event.preventDefault()
       onSave(event, editing)
@@ -22,8 +23,6 @@ const EditForm = ({editing, onChange, onCancel, onSave}) => (
       ))
     ) : (
       <>
-        {console.log(editing)}
-        {getEdited(editing, 'time')}
         <input
           type="text/"
           name="place"
@@ -31,8 +30,9 @@ const EditForm = ({editing, onChange, onCancel, onSave}) => (
           value={getEdited(editing, 'place')}
           onInput={onChange}
         />
-        {'toPlace' in editing.initial || 'toPlace' in editing.changed && (
+        {('toPlace' in editing.initial || 'toPlace' in editing.changed) && (
           <>
+            -
             <input
               type="text"
               name="toPlace"

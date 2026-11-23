@@ -1,6 +1,6 @@
 import {useState, useRef} from 'preact/hooks'
 
-const Draggable = ({onChange, children}) => {
+const Draggable = ({children, onChange, ...rest}) => {
   const ref = useRef({startY: 0})
   const [position, setPosition] = useState({})
   const handleDrag = event => {
@@ -21,7 +21,7 @@ const Draggable = ({onChange, children}) => {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
     onChange?.(event, {y: position.y, state: 'end'})
-    setPosition({})
+    setPosition({y: 0})
   }
 
   return (
@@ -34,6 +34,7 @@ const Draggable = ({onChange, children}) => {
       onPointerDown={handleDrag}
       onPointerMove={handleMove}
       onPointerUp={handleEnd}
+      {...rest} 
     >
       {children}
     </div>

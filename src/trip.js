@@ -26,9 +26,9 @@ const saveTrip = async (data = [], editInfo) => {
       ...editInfo.changed,
     })
     .concat(data.slice(editInfo.index + 1))
-  console.log('Updated trip data:', updated)
   const tripKey = updated[0].date
-  return setTrip(tripKey, formatPlan(updated))
+  setTrip(tripKey, formatPlan(updated))
+  return updated
 }
 
 const getDefaultTripDate = () => {
@@ -61,6 +61,12 @@ const reduceEdit = (state, action) =>
           ...state,
           changed: expandTransit({...state.changed, [action.key]: action.value}),
         }
+      : action.type === 'move'
+        ? {
+            ...state,
+            index: action.index,
+            changed: {...state.changed, time: action.time},
+          }
       : action.type === 'add-event'
         ? {
             mode: 'insert',
